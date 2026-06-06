@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Editar Postulante{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width:600px;margin:0 auto">
+  <div class="card">
+    <div class="card-header d-flex align-items-center gap-2">
+      <i class="bi bi-pencil text-warning"></i>
+      Editar datos — {{ object.nombre_completo }}
+    </div>
+    <div class="card-body p-4">
+      <div class="alert alert-info border-0 rounded-3 small mb-4">
+        <i class="bi bi-journal-text me-2"></i>
+        Esta acción quedará registrada en el log de auditoría del sistema.
+      </div>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+          {% for field in form %}
+          <div class="col-12">
+            <label class="form-label fw-semibold small">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="d-flex gap-2 mt-4">
+          <a href="{% url 'evaluaciones:detalle' object.pk %}" class="btn btn-outline-secondary flex-fill">
+            Cancelar
+          </a>
+          <button type="submit" class="btn btn-warning flex-fill fw-semibold">
+            <i class="bi bi-save me-1"></i>Guardar cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

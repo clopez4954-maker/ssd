@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Dashboard de Reportes{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1"><i class="bi bi-bar-chart me-2 text-primary"></i>Reportes y Estadísticas</h1>
+      <p class="text-muted mb-0">Análisis del estado actual de postulaciones</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'reportes:exportar_excel' %}" class="btn btn-success">
+        <i class="bi bi-file-earmark-excel me-1"></i>Excel
+      </a>
+      <a href="{% url 'reportes:exportar_csv' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-filetype-csv me-1"></i>CSV
+      </a>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card" style="background:linear-gradient(135deg,#1e3a5f,#2d5a8e)">
+        <div class="stat-value">{{ total_postulantes }}</div>
+        <div class="stat-label">Total postulantes</div>
+        <i class="bi bi-people stat-icon"></i>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card" style="background:linear-gradient(135deg,#27ae60,#2ecc71)">
+        <div class="stat-value">{{ total_aprobados }}</div>
+        <div class="stat-label">Aprobados</div>
+        <i class="bi bi-patch-check stat-icon"></i>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card" style="background:linear-gradient(135deg,#e74c3c,#c0392b)">
+        <div class="stat-value">{{ total_rechazados }}</div>
+        <div class="stat-label">Rechazados</div>
+        <i class="bi bi-x-circle stat-icon"></i>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card" style="background:linear-gradient(135deg,#f39c12,#e67e22)">
+        <div class="stat-value">{{ total_pendientes }}</div>
+        <div class="stat-label">Pendientes</div>
+        <i class="bi bi-hourglass stat-icon"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segunda fila de stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body text-center p-4">
+          <div class="text-muted small mb-1">Puntaje Promedio</div>
+          <div class="display-4 fw-black text-primary">{{ puntaje_promedio }}</div>
+          <div class="text-muted small">de 100 puntos</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body text-center p-4">
+          <div class="text-muted small mb-1">Puntaje Máximo</div>
+          <div class="display-4 fw-black text-success">{{ puntaje_max }}</div>
+          <div class="text-muted small">registrado</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body text-center p-4">
+          <div class="text-muted small mb-1">Tasa de Aprobación</div>
+          <div class="display-4 fw-black text-warning">
+            {% if total_evaluados %}
+              {% widthratio total_aprobados total_evaluados 100 %}%
+            {% else %}0%{% endif %}
+          </div>
+          <div class="text-muted small">de evaluados</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficas -->
+  <div class="row g-4 mb-4">
+    <!-- Donut estados -->
+    <div class="col-lg-5">
+      <div class="card h-100">
+        <div class="card-header">
+          <i class="bi bi-pie-chart me-2"></i>Distribución por Estado
+        </div>
+        <div class="card-body d-flex align-items-center justify-content-center">
+          <canvas id="donutEstados" style="max-height:240px"></canvas>
+        </div>
+      </div>
+    </div>
+    <!-- Barras por estrato -->
+    <div class="col-lg-7">
+      <div class="card h-100">
+        <div class="card-header">
+          <i class="bi bi-bar-chart me-2"></i>Postulantes y Aprobados por Estrato
+        </div>
+        <div class="card-body">
+          <canvas id="barEstrato" style="max-height:240px"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top 10 aprobados -->
+  {% if top_postulantes %}
+  <div class="card">
+    <div class="card-header">
+      <i class="bi bi-trophy me-2 text-warning"></i>Top 10 — Postulantes Aprobados
+    </div>
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Postulante</th>
+            <th class="text-center">Puntaje Total</th>
+            <th class="text-center">Académico</th>
+            <th class="text-center">Socioeconómico</th>
+            <th class="text-center">Fecha evaluación</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ev in top_postulantes %}
+          <tr>
+            <td>
+              {% if forloop.counter == 1 %}<i class="bi bi-trophy-fill text-warning"></i>
+              {% elif forloop.counter == 2 %}<i class="bi bi-trophy-fill text-secondary"></i>
+              {% elif forloop.counter == 3 %}<i class="bi bi-trophy-fill" style="color:#cd7f32"></i>
+              {% else %}{{ forloop.counter }}{% endif %}
+            </td>
+            <td>
+              <a href="{% url 'evaluaciones:detalle' ev.postulante.pk %}" class="text-decoration-none fw-semibold">
+                {{ ev.postulante.nombre_completo }}
+              </a>
+              <div class="small text-muted">{{ ev.postulante.cedula }}</div>
+            </td>
+            <td class="text-center fw-bold text-primary fs-5">{{ ev.puntaje_total|floatformat:1 }}</td>
+            <td class="text-center">{{ ev.puntaje_academico|floatformat:1 }}</td>
+            <td class="text-center">{{ ev.puntaje_socioeconomico|floatformat:1 }}</td>
+            <td class="text-center small text-muted">
+              {{ ev.fecha_evaluacion|date:"d/m/Y" }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Donut: estados ─────────────────────────────
+const donutCtx = document.getElementById('donutEstados');
+new Chart(donutCtx, {
+  type: 'doughnut',
+  data: {
+    labels: {{ estado_data.labels|safe }},
+    datasets: [{
+      data: {{ estado_data.values|safe }},
+      backgroundColor: ['#f39c12', '#27ae60', '#e74c3c'],
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 16, font: { family: 'Inter' } } }
+    },
+    cutout: '65%',
+  }
+});
+
+// ── Barras: por estrato ────────────────────────
+const barCtx = document.getElementById('barEstrato');
+const estratoData = {{ estrato_data|safe }};
+new Chart(barCtx, {
+  type: 'bar',
+  data: {
+    labels: estratoData.map(d => 'Estrato ' + d.estrato),
+    datasets: [
+      {
+        label: 'Total',
+        data: estratoData.map(d => d.total),
+        backgroundColor: 'rgba(30,58,95,0.7)',
+        borderRadius: 6,
+      },
+      {
+        label: 'Aprobados',
+        data: estratoData.map(d => d.aprobados),
+        backgroundColor: 'rgba(39,174,96,0.8)',
+        borderRadius: 6,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { family: 'Inter' } } }
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#e2e8f0' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+</script>
+{% endblock %}

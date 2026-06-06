@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Convocatorias{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1"><i class="bi bi-calendar-event gold-text me-2"></i>Convocatorias</h1>
+      <p class="text-muted mb-0">Gestión de períodos de postulación a becas</p>
+    </div>
+    <a href="{% url 'convocatorias:crear' %}" class="btn btn-gold d-flex align-items-center gap-2">
+      <i class="bi bi-plus-lg"></i> Nueva Convocatoria
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th class="ps-4">Nombre</th>
+              <th>Descripción</th>
+              <th>Inicio</th>
+              <th>Cierre</th>
+              <th>Estado</th>
+              <th>Activa</th>
+              <th class="text-end pe-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for conv in convocatorias %}
+            <tr>
+              <td class="ps-4 fw-semibold">{{ conv.nombre }}</td>
+              <td class="text-muted">{{ conv.descripcion|default:"Sin descripción"|truncatechars:50 }}</td>
+              <td>{{ conv.fecha_inicio|date:"d M Y" }}</td>
+              <td>{{ conv.fecha_fin|date:"d M Y" }}</td>
+              <td>
+                {% if conv.estado_display == 'Abierta' %}
+                  <span class="badge bg-success-subtle text-success">Abierta</span>
+                {% elif conv.estado_display == 'Cerrada' %}
+                  <span class="badge bg-danger-subtle text-danger">Cerrada</span>
+                {% elif conv.estado_display == 'Próxima' %}
+                  <span class="badge bg-info-subtle text-info">Próxima</span>
+                {% else %}
+                  <span class="badge bg-secondary-subtle text-secondary">Inactiva</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if conv.activa %}
+                  <span class="text-success"><i class="bi bi-check-circle-fill"></i></span>
+                {% else %}
+                  <span class="text-muted"><i class="bi bi-x-circle"></i></span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-4">
+                <a href="{% url 'convocatorias:editar' conv.pk %}" class="btn btn-sm btn-outline-light">
+                  <i class="bi bi-pencil"></i> Editar
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-calendar-x fs-1 d-block mb-3"></i>
+                No hay convocatorias registradas.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}Editar{% else %}Nuevo{% endif %} Parámetro{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width:580px;margin:0 auto">
+  <div class="card">
+    <div class="card-header">
+      <i class="bi bi-sliders me-2 text-warning"></i>
+      {% if object %}Editar parámetro: <code>{{ object.nombre }}</code>{% else %}Nuevo parámetro{% endif %}
+    </div>
+    <div class="card-body p-4">
+
+      {% if object %}
+      <div class="alert alert-danger border-0 rounded-3 small mb-4">
+        <i class="bi bi-lightning-charge me-2"></i>
+        <strong>Al guardar</strong> se recalcularán automáticamente todos los puntajes del sistema.
+      </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+          {% for field in form %}
+          <div class="col-12">
+            <label class="form-label fw-semibold small">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+            <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% if field.errors %}
+            <div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="d-flex gap-2 mt-4">
+          <a href="{% url 'parametros:lista' %}" class="btn btn-outline-secondary flex-fill">
+            Cancelar
+          </a>
+          <button type="submit" class="btn btn-warning flex-fill fw-semibold"
+                  {% if object %}onclick="return confirm('¿Confirmas? Esto recalculará todos los puntajes.')"{% endif %}>
+            <i class="bi bi-save me-1"></i>Guardar parámetro
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

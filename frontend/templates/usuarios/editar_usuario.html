@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Editar Usuario{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width: 600px; margin: 0 auto;">
+  <div class="card">
+    <div class="card-header d-flex align-items-center gap-2">
+      <i class="bi bi-pencil gold-text fs-4"></i>
+      <h2 class="h5 fw-bold mb-0">Editar Usuario</h2>
+    </div>
+    <div class="card-body p-4">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        
+        {% for field in form %}
+        <div class="mb-3">
+          <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}
+            <div class="form-text text-muted">{{ field.help_text }}</div>
+          {% endif %}
+          {% if field.errors %}
+            <div class="text-danger mt-1 small">{{ field.errors.as_text }}</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        <!-- Selector de rol personalizado -->
+        <div class="mb-4">
+          <label for="id_rol" class="form-label fw-semibold">Rol del Sistema</label>
+          <select name="rol" id="id_rol" class="form-select">
+            <option value="postulante" {% if object.perfil.rol == 'postulante' %}selected{% endif %}>Postulante</option>
+            <option value="evaluador" {% if object.perfil.rol == 'evaluador' %}selected{% endif %}>Evaluador</option>
+            <option value="administrador" {% if object.perfil.rol == 'administrador' %}selected{% endif %}>Administrador</option>
+          </select>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <a href="{% url 'usuarios:gestion' %}" class="btn btn-outline-light">Cancelar</a>
+          <button type="submit" class="btn btn-gold">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Datos Académicos{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width:680px;margin:0 auto">
+  <div class="steps-wizard mb-4">
+    <div class="step-item done">
+      <div class="step-circle"><i class="bi bi-check"></i></div>
+      <span class="step-label">Datos Personales</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item active">
+      <div class="step-circle">2</div>
+      <span class="step-label">Académicos</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-circle">3</div>
+      <span class="step-label">Socioeconómicos</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <i class="bi bi-mortarboard me-2 text-primary"></i>Información Académica
+    </div>
+    <div class="card-body p-4">
+      {% if not puede_editar %}
+      <div class="alert alert-warning border-0 rounded-3 mb-4">
+        <i class="bi bi-lock me-2"></i>
+        Tu información está <strong>bloqueada</strong> porque la convocatoria está cerrada o ya fuiste evaluado.
+      </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">{{ form.institucion.label }} *</label>
+            {{ form.institucion }}
+          </div>
+          <div class="col-md-8">
+            <label class="form-label">{{ form.carrera.label }} *</label>
+            {{ form.carrera }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ form.semestre.label }} *</label>
+            {{ form.semestre }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ form.promedio.label }} *</label>
+            {{ form.promedio }}
+            {% if form.promedio.errors %}
+            <div class="text-danger small mt-1">{{ form.promedio.errors|join:", " }}</div>
+            {% endif %}
+            <div class="form-text">Escala de 0 a 5.00</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ form.creditos_aprobados.label }} *</label>
+            {{ form.creditos_aprobados }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ form.creditos_totales.label }}</label>
+            {{ form.creditos_totales }}
+          </div>
+        </div>
+
+        <!-- Info sobre el modelo de puntaje -->
+        <div class="alert alert-info border-0 rounded-3 mt-3 small">
+          <i class="bi bi-calculator me-2"></i>
+          <strong>¿Cómo se calcula tu puntaje académico?</strong><br>
+          Promedio (hasta 40 pts) + Créditos aprobados (hasta 20 pts) = máximo 60 pts académicos.
+        </div>
+
+        {% if puede_editar %}
+        <div class="d-flex justify-content-between mt-3">
+          <a href="{% url 'postulantes:datos_personales' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Anterior
+          </a>
+          <button type="submit" class="btn btn-primary px-4">
+            Siguiente <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </div>
+        {% else %}
+        <div class="text-end mt-3">
+          <a href="{% url 'postulantes:panel' %}" class="btn btn-outline-primary">
+            <i class="bi bi-house me-1"></i>Ir al panel
+          </a>
+        </div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

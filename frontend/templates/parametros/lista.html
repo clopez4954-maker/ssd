@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Panel de Parámetros{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1"><i class="bi bi-sliders me-2 text-primary"></i>Parámetros del Modelo</h1>
+      <p class="text-muted mb-0">Configuración del algoritmo de evaluación automática</p>
+    </div>
+    {% if user.perfil.es_administrador %}
+    <a href="{% url 'parametros:crear' %}" class="btn btn-primary">
+      <i class="bi bi-plus-lg me-1"></i>Nuevo parámetro
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Alerta de impacto -->
+  <div class="alert alert-warning border-0 rounded-3 mb-4">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Importante:</strong> Al guardar cualquier cambio, el sistema recalculará automáticamente
+    el puntaje de <em>todos</em> los postulantes con datos completos.
+  </div>
+
+  <!-- Tabla de parámetros -->
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>Nombre del parámetro</th>
+            <th class="text-center">Valor actual</th>
+            <th>Descripción</th>
+            <th class="text-center">Vigente</th>
+            <th>Última modificación</th>
+            {% if user.perfil.es_administrador %}<th class="text-center">Acción</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in parametros %}
+          <tr>
+            <td>
+              <code class="text-primary fw-semibold">{{ p.nombre }}</code>
+            </td>
+            <td class="text-center">
+              <span class="badge text-bg-primary fs-6 px-3">{{ p.valor }}</span>
+            </td>
+            <td class="text-muted small">{{ p.descripcion|default:"—" }}</td>
+            <td class="text-center">
+              {% if p.vigente %}
+              <span class="badge text-bg-success"><i class="bi bi-check"></i> Activo</span>
+              {% else %}
+              <span class="badge text-bg-secondary">Inactivo</span>
+              {% endif %}
+            </td>
+            <td class="small text-muted">
+              {{ p.fecha_modificacion|date:"d/m/Y H:i" }}
+              {% if p.modificado_por %}<br><span class="text-primary">{{ p.modificado_por.get_full_name }}</span>{% endif %}
+            </td>
+            {% if user.perfil.es_administrador %}
+            <td class="text-center">
+              <a href="{% url 'parametros:editar' p.pk %}" class="btn btn-sm btn-outline-warning">
+                <i class="bi bi-pencil"></i>
+              </a>
+            </td>
+            {% endif %}
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-5 text-muted">
+              No hay parámetros configurados.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Referencia del modelo -->
+  <div class="card mt-4">
+    <div class="card-header"><i class="bi bi-calculator me-2"></i>Referencia del Modelo de Evaluación</div>
+    <div class="card-body">
+      <div class="row g-4">
+        <div class="col-md-6">
+          <h6 class="fw-bold text-primary">Puntaje Académico (máx. 60)</h6>
+          <pre class="bg-light rounded p-3 small mb-0">P_acad = (promedio / 5) × 40
+        + min((créditos / 30) × 20, 20)</pre>
+        </div>
+        <div class="col-md-6">
+          <h6 class="fw-bold text-primary">Puntaje Socioeconómico (máx. 40)</h6>
+          <pre class="bg-light rounded p-3 small mb-0">P_socio = (1 - min(ingreso/ingreso_max, 0.95)) × 25
+         + puntos_estrato{1:15, 2:12, 3:8, 4:4}</pre>
+        </div>
+        <div class="col-12">
+          <h6 class="fw-bold text-primary">Puntaje Total</h6>
+          <pre class="bg-light rounded p-3 small mb-0">P_total = P_acad × peso_academico + P_socio × peso_socioeconomico
+Estado  = "Aprobado" si P_total ≥ puntaje_corte_aprobado</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

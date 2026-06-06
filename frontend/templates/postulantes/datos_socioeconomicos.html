@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Datos Socioeconómicos{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width:680px;margin:0 auto">
+  <div class="steps-wizard mb-4">
+    <div class="step-item done">
+      <div class="step-circle"><i class="bi bi-check"></i></div>
+      <span class="step-label">Datos Personales</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item done">
+      <div class="step-circle"><i class="bi bi-check"></i></div>
+      <span class="step-label">Académicos</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item active">
+      <div class="step-circle">3</div>
+      <span class="step-label">Socioeconómicos</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <i class="bi bi-house-heart me-2 text-primary"></i>Información Socioeconómica
+    </div>
+    <div class="card-body p-4">
+      {% if not puede_editar %}
+      <div class="alert alert-warning border-0 rounded-3 mb-4">
+        <i class="bi bi-lock me-2"></i>
+        Tu información está <strong>bloqueada</strong> porque la convocatoria está cerrada.
+      </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">{{ form.ingreso_familiar.label }} *</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              {{ form.ingreso_familiar }}
+            </div>
+            {% if form.ingreso_familiar.errors %}
+            <div class="text-danger small mt-1">{{ form.ingreso_familiar.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ form.estrato.label }} *</label>
+            {{ form.estrato }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">{{ form.numero_personas_hogar.label }}</label>
+            {{ form.numero_personas_hogar }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ form.tipo_vivienda.label }}</label>
+            {{ form.tipo_vivienda }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ form.num_hermanos_universidad.label }}</label>
+            {{ form.num_hermanos_universidad }}
+          </div>
+          <div class="col-md-6">
+            <div class="form-check mt-2">
+              {{ form.trabaja }}
+              <label class="form-check-label">{{ form.trabaja.label }}</label>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-check mt-2">
+              {{ form.es_cabeza_hogar }}
+              <label class="form-check-label">{{ form.es_cabeza_hogar.label }}</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-info border-0 rounded-3 mt-3 small">
+          <i class="bi bi-shield-check me-2"></i>
+          <strong>Confidencialidad:</strong> tus datos económicos están protegidos y solo los
+          evaluadores autorizados tienen acceso a ellos.
+        </div>
+
+        {% if puede_editar %}
+        <div class="d-flex justify-content-between mt-3">
+          <a href="{% url 'postulantes:datos_academicos' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Anterior
+          </a>
+          <button type="submit" class="btn btn-success px-4 fw-semibold">
+            <i class="bi bi-send-check me-1"></i>Enviar solicitud
+          </button>
+        </div>
+        {% else %}
+        <div class="text-end mt-3">
+          <a href="{% url 'postulantes:panel' %}" class="btn btn-outline-primary">
+            <i class="bi bi-house me-1"></i>Ir al panel
+          </a>
+        </div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

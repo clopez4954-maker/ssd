@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Mi Panel{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+
+  <!-- ── Encabezado ─────────────────────────────── -->
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Hola, {{ user.first_name }} 👋</h1>
+      <p class="text-muted mb-0">Panel de tu postulación a beca universitaria</p>
+    </div>
+    {% if convocatoria_activa %}
+    <div class="badge text-bg-success fs-6 px-3 py-2">
+      <i class="bi bi-calendar-check me-1"></i>
+      Convocatoria: {{ convocatoria_activa.nombre }}
+    </div>
+    {% else %}
+    <div class="badge text-bg-secondary fs-6 px-3 py-2">
+      <i class="bi bi-calendar-x me-1"></i>Sin convocatoria activa
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Estado actual ──────────────────────────── -->
+  {% if evaluacion %}
+  <div class="status-card {{ evaluacion.estado }} mb-4">
+    <div class="row align-items-center">
+      <div class="col-md-7">
+        <h4 class="fw-bold mb-1">
+          {% if evaluacion.estado == 'aprobado' %}
+            🎉 ¡Felicitaciones! Tu beca fue aprobada
+          {% elif evaluacion.estado == 'rechazado' %}
+            😔 Tu solicitud fue rechazada
+          {% elif evaluacion.estado == 'evaluado' %}
+            📋 Tu solicitud ha sido evaluada
+          {% else %}
+            ⏳ Tu solicitud está en evaluación
+          {% endif %}
+        </h4>
+        <p class="text-muted mb-0">
+          Estado: <span class="badge text-bg-{{ evaluacion.estado_color }} ms-1">
+            {{ evaluacion.get_estado_display }}
+          </span>
+        </p>
+      </div>
+      {% if evaluacion.puntaje_total %}
+      <div class="col-md-5 text-md-end mt-3 mt-md-0">
+        <div class="text-muted small mb-1">Puntaje total</div>
+        <div class="display-5 fw-black" style="color:var(--primary)">
+          {{ evaluacion.puntaje_total|floatformat:1 }}
+          <span class="fs-4 text-muted fw-normal">/ 100</span>
+        </div>
+        <div class="row g-2 mt-1">
+          <div class="col-6">
+            <div class="bg-light rounded p-2 text-center">
+              <div class="small text-muted">Académico</div>
+              <div class="fw-bold">{{ evaluacion.puntaje_academico|floatformat:1 }}</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="bg-light rounded p-2 text-center">
+              <div class="small text-muted">Socioeconómico</div>
+              <div class="fw-bold">{{ evaluacion.puntaje_socioeconomico|floatformat:1 }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Progreso del formulario ────────────────── -->
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-clipboard-check me-2 text-primary"></i>Progreso de tu postulación</span>
+      <span class="badge text-bg-primary">{{ progreso }}% completado</span>
+    </div>
+    <div class="card-body">
+      <!-- Barra de progreso -->
+      <div class="progress mb-4" style="height:10px; border-radius:30px">
+        <div class="progress-bar bg-success" style="width:{{ progreso }}%; border-radius:30px;
+             transition:width .8s ease"></div>
+      </div>
+
+      <!-- Pasos -->
+      <div class="row g-3">
+
+        <!-- Paso 1: Datos personales -->
+        <div class="col-md-4">
+          <div class="card border-0 bg-light h-100">
+            <div class="card-body text-center p-3">
+              {% if tiene_datos_personales %}
+              <div class="text-success fs-2 mb-2"><i class="bi bi-check-circle-fill"></i></div>
+              {% else %}
+              <div class="text-warning fs-2 mb-2"><i class="bi bi-1-circle-fill"></i></div>
+              {% endif %}
+              <h6 class="fw-semibold mb-1">Datos Personales</h6>
+              <p class="small text-muted mb-3">Nombre, cédula, contacto y dirección</p>
+              {% if postulante and not postulante.puede_editar %}
+              <span class="badge text-bg-secondary">Cerrado</span>
+              {% else %}
+              <a href="{% url 'postulantes:datos_personales' %}"
+                 class="btn btn-sm {% if tiene_datos_personales %}btn-outline-success{% else %}btn-primary{% endif %}">
+                {% if tiene_datos_personales %}Editar{% else %}Completar{% endif %}
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 2: Datos académicos -->
+        <div class="col-md-4">
+          <div class="card border-0 bg-light h-100">
+            <div class="card-body text-center p-3">
+              {% if tiene_datos_academicos %}
+              <div class="text-success fs-2 mb-2"><i class="bi bi-check-circle-fill"></i></div>
+              {% elif tiene_datos_personales %}
+              <div class="text-warning fs-2 mb-2"><i class="bi bi-2-circle-fill"></i></div>
+              {% else %}
+              <div class="text-muted fs-2 mb-2"><i class="bi bi-2-circle"></i></div>
+              {% endif %}
+              <h6 class="fw-semibold mb-1">Datos Académicos</h6>
+              <p class="small text-muted mb-3">Institución, carrera, promedio y créditos</p>
+              {% if not tiene_datos_personales %}
+              <span class="badge text-bg-secondary">Completa el paso 1 primero</span>
+              {% elif postulante and not postulante.puede_editar and tiene_datos_academicos %}
+              <span class="badge text-bg-secondary">Cerrado</span>
+              {% else %}
+              <a href="{% url 'postulantes:datos_academicos' %}"
+                 class="btn btn-sm {% if tiene_datos_academicos %}btn-outline-success{% else %}btn-primary{% endif %}">
+                {% if tiene_datos_academicos %}Editar{% else %}Completar{% endif %}
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 3: Datos socioeconómicos -->
+        <div class="col-md-4">
+          <div class="card border-0 bg-light h-100">
+            <div class="card-body text-center p-3">
+              {% if tiene_datos_socio %}
+              <div class="text-success fs-2 mb-2"><i class="bi bi-check-circle-fill"></i></div>
+              {% elif tiene_datos_academicos %}
+              <div class="text-warning fs-2 mb-2"><i class="bi bi-3-circle-fill"></i></div>
+              {% else %}
+              <div class="text-muted fs-2 mb-2"><i class="bi bi-3-circle"></i></div>
+              {% endif %}
+              <h6 class="fw-semibold mb-1">Datos Socioeconómicos</h6>
+              <p class="small text-muted mb-3">Ingresos, estrato y composición del hogar</p>
+              {% if not tiene_datos_academicos %}
+              <span class="badge text-bg-secondary">Completa el paso 2 primero</span>
+              {% elif postulante and not postulante.puede_editar and tiene_datos_socio %}
+              <span class="badge text-bg-secondary">Cerrado</span>
+              {% else %}
+              <a href="{% url 'postulantes:datos_socioeconomicos' %}"
+                 class="btn btn-sm {% if tiene_datos_socio %}btn-outline-success{% else %}btn-primary{% endif %}">
+                {% if tiene_datos_socio %}Editar{% else %}Completar{% endif %}
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if progreso == 100 and not evaluacion %}
+      <div class="alert alert-success border-0 rounded-3 mt-3 mb-0">
+        <i class="bi bi-check-all me-2"></i>
+        <strong>¡Formulario completo!</strong> Tu postulación está siendo procesada por el equipo evaluador.
+      </div>
+      {% elif progreso < 100 and convocatoria_activa %}
+      <div class="alert alert-warning border-0 rounded-3 mt-3 mb-0 small">
+        <i class="bi bi-clock me-2"></i>
+        Completa los 3 pasos antes del <strong>{{ convocatoria_activa.fecha_fin|date:"d/m/Y" }}</strong>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

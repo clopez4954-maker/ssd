@@ -1,0 +1,57 @@
+[
+  {
+    "model": "parametros.parametrobeca",
+    "pk": 1,
+    "fields": {
+      "nombre": "peso_academico",
+      "valor": "1.0000",
+      "descripcion": "Peso o ponderador asignado al puntaje académico (0.0 a 1.0)",
+      "vigente": true,
+      "fecha_modificacion": "2026-06-05T14:00:00Z"
+    }
+  },
+  {
+    "model": "parametros.parametrobeca",
+    "pk": 2,
+    "fields": {
+      "nombre": "peso_socioeconomico",
+      "valor": "1.0000",
+      "descripcion": "Peso o ponderador asignado al puntaje socioeconómico (0.0 a 1.0)",
+      "vigente": true,
+      "fecha_modificacion": "2026-06-05T14:00:00Z"
+    }
+  },
+  {
+    "model": "parametros.parametrobeca",
+    "pk": 3,
+    "fields": {
+      "nombre": "promedio_minimo",
+      "valor": "3.0000",
+      "descripcion": "Promedio acumulado mínimo requerido para no ser rechazado automáticamente",
+      "vigente": true,
+      "fecha_modificacion": "2026-06-05T14:00:00Z"
+    }
+  },
+  {
+    "model": "parametros.parametrobeca",
+    "pk": 4,
+    "fields": {
+      "nombre": "ingreso_maximo",
+      "valor": "4000000.0000",
+      "descripcion": "Ingreso familiar mensual máximo para la normalización del puntaje socioeconómico",
+      "vigente": true,
+      "fecha_modificacion": "2026-06-05T14:00:00Z"
+    }
+  },
+  {
+    "model": "parametros.parametrobeca",
+    "pk": 5,
+    "fields": {
+      "nombre": "puntaje_corte_aprobado",
+      "valor": "60.0000",
+      "descripcion": "Puntaje total mínimo requerido para ser Aprobado",
+      "vigente": true,
+      "fecha_modificacion": "2026-06-05T14:00:00Z"
+    }
+  }
+]

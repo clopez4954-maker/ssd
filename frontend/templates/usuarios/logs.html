@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Logs de Auditoría{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+  <div class="mb-4">
+    <h1 class="h3 fw-bold mb-1"><i class="bi bi-journal-text gold-text me-2"></i>Logs de Auditoría</h1>
+    <p class="text-muted mb-0">Registro histórico de acciones críticas del sistema</p>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-md-4">
+          <label for="filter_accion" class="form-label small fw-semibold">Filtrar por Acción</label>
+          <select name="accion" id="filter_accion" class="form-select">
+            <option value="">Todas las acciones</option>
+            {% for code, label in acciones %}
+              <option value="{{ code }}" {% if request.GET.accion == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="filter_usuario" class="form-label small fw-semibold">Filtrar por Usuario Staff</label>
+          <select name="usuario" id="filter_usuario" class="form-select">
+            <option value="">Todos los usuarios</option>
+            {% for u in usuarios_staff %}
+              <option value="{{ u.id }}" {% if request.GET.usuario == u.id|stringformat:"s" %}selected{% endif %}>
+                {{ u.get_full_name|default:u.username }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-gold w-100"><i class="bi bi-filter"></i> Filtrar</button>
+          <a href="{% url 'usuarios:logs' %}" class="btn btn-outline-light w-100">Limpiar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th class="ps-4">Fecha y Hora</th>
+              <th>Usuario</th>
+              <th>Acción</th>
+              <th>Detalles</th>
+              <th class="pe-4">Dirección IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr>
+              <td class="ps-4">{{ log.timestamp|date:"d/m/Y H:i:s" }}</td>
+              <td class="fw-semibold">{{ log.usuario.username|default:"Sistema" }}</td>
+              <td>
+                <span class="badge bg-secondary-subtle text-secondary">{{ log.get_accion_display }}</span>
+              </td>
+              <td class="text-muted small">
+                {% if log.detalles %}
+                  {{ log.detalles }}
+                {% elif log.objeto_id %}
+                  ID Objeto: {{ log.objeto_id }} {% if log.objeto_tipo %}({{ log.objeto_tipo }}){% endif %}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td class="pe-4">{{ log.ip_address|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-5 text-muted">
+                No se encontraron logs registrados.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% if is_paginated %}
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <div class="text-muted small">
+        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+      </div>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.accion %}&accion={{ request.GET.accion }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}">Anterior</a>
+            </li>
+          {% endif %}
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.accion %}&accion={{ request.GET.accion }}{% endif %}{% if request.GET.usuario %}&usuario={{ request.GET.usuario }}{% endif %}">Siguiente</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
