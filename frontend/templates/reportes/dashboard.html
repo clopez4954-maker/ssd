@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}Dashboard de Reportes{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  .stat-card-custom {
+    border: none;
+    border-radius: 16px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+  }
+  .stat-card-custom:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+  }
+  .card-gradient-primary {
+    background: linear-gradient(135deg, #1e3a5f, #2d5a8e);
+    color: white;
+  }
+  .card-gradient-success {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: white;
+  }
+  .card-gradient-danger {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+  }
+  .card-gradient-info {
+    background: linear-gradient(135deg, #0284c7, #0ea5e9);
+    color: white;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 fade-in">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1"><i class="bi bi-bar-chart me-2 text-primary"></i>Reportes y Estadísticas</h1>
+            <p class="text-muted mb-0">Análisis del estado actual de postulaciones y métricas del sistema.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'reportes:exportar_excel' %}" class="btn btn-success d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+            </a>
+            <a href="{% url 'reportes:exportar_csv' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2">
+                <i class="bi bi-filetype-csv"></i> CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Fichas completas vs incompletas alert/stats bar -->
+    <div class="card mb-4 border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Progreso de Fichas de Postulación</h5>
+            <div class="progress mb-2" style="height: 25px; border-radius: 12px;">
+                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" role="progressbar" 
+                     style="width: {{ porcentaje_completadas }}%;" aria-valuenow="{{ porcentaje_completadas }}" aria-valuemin="0" aria-valuemax="100">
+                    Completas ({{ porcentaje_completadas }}%)
+                </div>
+                <div class="progress-bar bg-warning text-dark progress-bar-striped" role="progressbar" 
+                     style="width: {{ porcentaje_incompletas }}%;" aria-valuenow="{{ porcentaje_incompletas }}" aria-valuemin="0" aria-valuemax="100">
+                    Incompletas ({{ porcentaje_incompletas }}%)
+                </div>
+            </div>
+            <div class="d-flex justify-content-between text-muted small mt-1">
+                <span>Fichas Completadas: <strong>{{ completados_count }}</strong></span>
+                <span>Fichas Incompletas/En Proceso: <strong>{{ incompletos_count }}</strong></span>
+                <span>Total Registrados: <strong>{{ total_postulantes }}</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjetas de distribución por estado -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm stat-card-custom card-gradient-primary">
+                <div class="card-body p-4">
+                    <h5 class="card-title opacity-75">Completadas</h5>
+                    <p class="card-text display-4 fw-bold mb-0">{{ completadas }}</p>
+                    <small class="opacity-50">Listas para evaluación</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm stat-card-custom card-gradient-success">
+                <div class="card-body p-4">
+                    <h5 class="card-title opacity-75">Beca Asignada</h5>
+                    <p class="card-text display-4 fw-bold mb-0">{{ asignadas }}</p>
+                    <small class="opacity-50">Beneficiarios seleccionados</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm stat-card-custom card-gradient-danger">
+                <div class="card-body p-4">
+                    <h5 class="card-title opacity-75">No seleccionado</h5>
+                    <p class="card-text display-4 fw-bold mb-0">{{ no_seleccionados }}</p>
+                    <small class="opacity-50">Postulantes no seleccionados</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm stat-card-custom card-gradient-info">
+                <div class="card-body p-4">
+                    <h5 class="card-title opacity-75">Promedio Z</h5>
+                    <p class="card-text display-4 fw-bold mb-0">{{ promedio_z|floatformat:1 }}</p>
+                    <small class="opacity-50">Puntaje promedio general</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficas -->
+    <div class="row g-4 mb-4">
+        <!-- Postulantes por Estrato -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Postulantes por Estrato</h5>
+                </div>
+                <div class="card-body p-4">
+                    <canvas id="estratoChart" style="max-height: 280px;"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- Distribución por Facultad -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-pie-chart-fill text-success me-2"></i>Distribución por Facultad</h5>
+                </div>
+                <div class="card-body p-4 d-flex align-items-center justify-content-center">
+                    <canvas id="facultadChart" style="max-height: 280px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enlaces rápidos -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 text-center">
+                    <h5 class="fw-bold mb-3">Accesos Directos de Gestión</h5>
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <a href="{% url 'ranking_postulantes' %}" class="btn btn-primary px-4 py-2 rounded-3">
+                            🏆 Ver Ranking Completo
+                        </a>
+                        <a href="{% url 'reportes:exportar_excel' %}" class="btn btn-success px-4 py-2 rounded-3">
+                            📊 Exportar Reporte Excel
+                        </a>
+                        <a href="{% url 'parametros:lista' %}" class="btn btn-secondary px-4 py-2 rounded-3">
+                            ⚙️ Configurar Parámetros
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Gráfico de Estrato ────────────────────────
+const estratoCtx = document.getElementById('estratoChart');
+const estratoDataRaw = {{ estrato_data|safe }};
+new Chart(estratoCtx, {
+  type: 'bar',
+  data: {
+    labels: estratoDataRaw.map(d => 'Estrato ' + d.estrato),
+    datasets: [
+      {
+        label: 'Total',
+        data: estratoDataRaw.map(d => d.total),
+        backgroundColor: 'rgba(30, 58, 95, 0.85)',
+        borderRadius: 6,
+      },
+      {
+        label: 'Aprobados',
+        data: estratoDataRaw.map(d => d.aprobados),
+        backgroundColor: 'rgba(39, 174, 96, 0.85)',
+        borderRadius: 6,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { family: 'Inter', weight: '500' } } }
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ── Gráfico de Facultad ────────────────────────
+const facultadCtx = document.getElementById('facultadChart');
+const facultadLabels = {{ facultad_data.labels|safe }};
+const facultadValues = {{ facultad_data.values|safe }};
+
+new Chart(facultadCtx, {
+  type: 'doughnut',
+  data: {
+    labels: facultadLabels,
+    datasets: [{
+      data: facultadValues,
+      backgroundColor: [
+        '#1e3a5f', '#27ae60', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#d35400'
+      ],
+      borderWidth: 2,
+      borderColor: '#ffffff'
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'right', labels: { boxWidth: 15, font: { family: 'Inter', size: 11 } } }
+    },
+    cutout: '60%',
+  }
+});
+</script>
+{% endblock %}

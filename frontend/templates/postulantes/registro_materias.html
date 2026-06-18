@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}Registro Académico de Materias - BecasUni{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      
+      <!-- Card del Formulario -->
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="fs-1 text-primary"><i class="bi bi-journal-bookmark-fill"></i></div>
+            <div>
+              <h2 class="h4 fw-bold text-dark mb-1">Registro Académico</h2>
+              <p class="text-muted mb-0">Registra las materias cursadas en semestres anteriores. El sistema calculará automáticamente tu PPA y materias aprobadas.</p>
+            </div>
+          </div>
+          <hr class="mt-3 mb-0 opacity-25">
+        </div>
+
+        <div class="card-body p-4">
+          <form method="post" id="materias-form" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ formset.management_form }}
+
+            <!-- Resumen Académico Actual -->
+            {% if datos_acad.ppa > 0 or datos_acad.materias_aprobadas > 0 %}
+            <div class="row g-3 mb-4 justify-content-center">
+              <div class="col-sm-4 col-md-3">
+                <div class="card border-0 bg-light p-3 rounded-3 text-center shadow-sm">
+                  <div class="text-muted small fw-bold mb-1">PPA (Promedio)</div>
+                  <div class="h3 fw-bold text-dark mb-0">{{ datos_acad.ppa|floatformat:2 }}</div>
+                </div>
+              </div>
+              <div class="col-sm-4 col-md-3">
+                <div class="card border-0 bg-light p-3 rounded-3 text-center shadow-sm">
+                  <div class="text-muted small fw-bold mb-1">Materias Aprobadas</div>
+                  <div class="h3 fw-bold text-dark mb-0">{{ datos_acad.materias_aprobadas }}</div>
+                </div>
+              </div>
+              <div class="col-sm-4 col-md-4">
+                <div class="card border-0 bg-light p-3 rounded-3 text-center shadow-sm">
+                  <div class="text-muted small fw-bold mb-1">Puntaje Académico Total</div>
+                  <div class="h3 fw-bold text-primary mb-0">{{ datos_acad.puntaje_academico_total|floatformat:1 }} <span class="fs-6 text-muted">/ 30.0</span></div>
+                  <small class="text-muted">PPA: {{ datos_acad.puntaje_ppa|floatformat:1 }} | Mat: {{ datos_acad.puntaje_materias|floatformat:1 }}</small>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Carga de Certificado de Notas -->
+            <div class="card bg-light border-0 rounded-4 p-4 mb-4">
+              <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-file-earmark-pdf-fill text-primary me-2"></i>Certificado de Notas (Respaldo)</h5>
+              <div class="row align-items-center">
+                <div class="col-md-7">
+                  <p class="text-muted small mb-3 mb-md-0">
+                    Sube tu certificado de notas en formato <strong>PDF</strong>. Este documento es obligatorio para que el evaluador valide la información cargada en el cuadro de materias. (Tamaño máximo: 5 MB).
+                  </p>
+                  {{ form_acad.certificado_notas_pdf }}
+                  {% if form_acad.certificado_notas_pdf.errors %}
+                    <div class="invalid-feedback d-block mt-2">{{ form_acad.certificado_notas_pdf.errors.as_text }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                  {% if datos_acad.certificado_notas_pdf %}
+                    <div class="p-3 bg-white rounded-3 border d-inline-block text-start shadow-sm">
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-file-earmark-check-fill text-success fs-4"></i>
+                        <div>
+                          <div class="small fw-bold text-dark">Certificado Cargado</div>
+                          <a href="{{ datos_acad.certificado_notas_pdf.url }}" target="_blank" class="btn btn-link btn-sm p-0 text-primary fw-semibold text-decoration-none">
+                            <i class="bi bi-eye"></i> Ver PDF Actual
+                          </a>
+                        </div>
+                      </div>
+                      <small class="text-muted d-block">Sube un nuevo archivo si deseas reemplazarlo.</small>
+                    </div>
+                  {% else %}
+                    <span class="badge bg-warning text-dark rounded-pill px-3 py-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Falta certificado</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Mensaje Informativo -->
+            <div class="alert alert-info border-0 rounded-3 d-flex align-items-center gap-3 mb-4" role="alert">
+              <span class="fs-4">💡</span>
+              <div>
+                <strong>Importante:</strong> Las notas deben estar en el rango de 0 a 100. Una materia se considera aprobada con una nota mayor o igual a <strong>51</strong>.
+              </div>
+            </div>
+
+            <!-- Tabla Dinámica de Materias -->
+            <div class="table-responsive">
+              <table class="table table-hover align-middle" id="materias-table">
+                <thead class="table-light font-monospace small uppercase text-secondary">
+                  <tr>
+                    <th>Nombre de la Materia *</th>
+                    <th style="width: 150px;">Sigla *</th>
+                    <th style="width: 130px;">Nota Final *</th>
+                    <th style="width: 160px;">Semestre *</th>
+                    <th class="text-center" style="width: 100px;">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="formset-tbody">
+                  {% for form in formset %}
+                    <tr class="formset-row">
+                      <!-- Campos ocultos del formulario (como ID y DELETE) -->
+                      {% for hidden in form.hidden_fields %}
+                        {{ hidden }}
+                      {% endfor %}
+                      
+                      <td>
+                        {{ form.nombre }}
+                        {% if form.nombre.errors %}
+                          <div class="invalid-feedback d-block">{{ form.nombre.errors.as_text }}</div>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {{ form.sigla }}
+                        {% if form.sigla.errors %}
+                          <div class="invalid-feedback d-block">{{ form.sigla.errors.as_text }}</div>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {{ form.nota }}
+                        {% if form.nota.errors %}
+                          <div class="invalid-feedback d-block">{{ form.nota.errors.as_text }}</div>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {{ form.semestre }}
+                        {% if form.semestre.errors %}
+                          <div class="invalid-feedback d-block">{{ form.semestre.errors.as_text }}</div>
+                        {% endif %}
+                      </td>
+                      <td class="text-center">
+                        {% if formset.can_delete %}
+                          <!-- Checkbox oculto de eliminación manejado por JS -->
+                          <div class="d-none">
+                            {{ form.DELETE }}
+                          </div>
+                          <button type="button" class="btn btn-outline-danger btn-sm rounded-3 btn-remove-row">
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Botón de añadir fila -->
+            <div class="mb-4">
+              <button type="button" class="btn btn-outline-primary rounded-3 btn-sm" id="btn-add-row">
+                <i class="bi bi-plus-circle-fill me-1"></i> Añadir materia
+              </button>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex justify-content-between align-items-center border-top pt-4">
+              <a href="{% url 'postulantes:panel' %}" class="btn btn-outline-secondary rounded-3 px-4">
+                <i class="bi bi-arrow-left me-1"></i> Volver al Panel
+              </a>
+              <button type="submit" class="btn btn-primary rounded-3 px-5 shadow">
+                <i class="bi bi-save-fill me-1"></i> Guardar Registro
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Template vacío para clonación por JS -->
+<table class="d-none">
+  <tr id="empty-row-template">
+    <td>
+      <input type="text" name="materias-__prefix__-nombre" class="form-control" placeholder="Ej. Cálculo I" id="id_materias-__prefix__-nombre" required maxlength="100">
+    </td>
+    <td>
+      <input type="text" name="materias-__prefix__-sigla" class="form-control" placeholder="Ej. MAT101" id="id_materias-__prefix__-sigla" required maxlength="10">
+    </td>
+    <td>
+      <input type="number" name="materias-__prefix__-nota" class="form-control" placeholder="0-100" min="0" max="100" step="0.1" id="id_materias-__prefix__-nota" required>
+    </td>
+    <td>
+      <input type="text" name="materias-__prefix__-semestre" class="form-control" placeholder="Ej. 2025-1" value="2025-1" id="id_materias-__prefix__-semestre" required maxlength="20">
+    </td>
+    <td class="text-center">
+      <input type="checkbox" name="materias-__prefix__-DELETE" id="id_materias-__prefix__-DELETE" class="d-none">
+      <button type="button" class="btn btn-outline-danger btn-sm rounded-3 btn-remove-row">
+        <i class="bi bi-trash-fill"></i>
+      </button>
+    </td>
+  </tr>
+</table>
+
+<!-- JavaScript Dinámico para Formsets -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tbody = document.getElementById('formset-tbody');
+    const addBtn = document.getElementById('btn-add-row');
+    const totalFormsInput = document.getElementById('id_materias-TOTAL_FORMS');
+    const emptyRowTemplate = document.getElementById('empty-row-template');
+
+    // Manejar Añadir Fila
+    addBtn.addEventListener('click', function() {
+      const formNum = parseInt(totalFormsInput.value);
+      const newRowHtml = emptyRowTemplate.innerHTML.replace(/__prefix__/g, formNum);
+      
+      const newRow = document.createElement('tr');
+      newRow.className = 'formset-row';
+      newRow.innerHTML = newRowHtml;
+      
+      tbody.appendChild(newRow);
+      
+      // Incrementar contador
+      totalFormsInput.value = formNum + 1;
+      
+      // Asignar evento al botón eliminar de la nueva fila
+      newRow.querySelector('.btn-remove-row').addEventListener('click', function() {
+        removeRow(newRow);
+      });
+    });
+
+    // Manejar Eliminar Fila para filas existentes
+    document.querySelectorAll('.formset-row').forEach(row => {
+      row.querySelector('.btn-remove-row').addEventListener('click', function() {
+        removeRow(row);
+      });
+    });
+
+    function removeRow(row) {
+      if (confirm('¿Está seguro de eliminar esta fila?')) {
+        const deleteCheckbox = row.querySelector('input[name$="-DELETE"]');
+        if (deleteCheckbox) {
+          // Si el formulario ya tiene registro en BD, marcar DELETE y ocultar la fila
+          deleteCheckbox.checked = true;
+          row.style.display = 'none';
+          row.classList.add('deleted-row');
+        } else {
+          // Si es un formulario nuevo, simplemente remover del DOM y decrementar TOTAL_FORMS
+          row.remove();
+          const rows = document.querySelectorAll('.formset-row:not(.deleted-row)');
+          totalFormsInput.value = rows.length;
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

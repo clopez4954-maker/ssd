@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Datos Personales y Requisitos{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width:760px;margin:0 auto">
+
+  <!-- Wizard pasos -->
+  <div class="steps-wizard mb-4">
+    <div class="step-item active">
+      <div class="step-circle">1</div>
+      <span class="step-label">Datos y Requisitos</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item {% if tiene_ficha_socioeconomica %}done{% endif %}">
+      <div class="step-circle">{% if tiene_ficha_socioeconomica %}<i class="bi bi-check"></i>{% else %}2{% endif %}</div>
+      <span class="step-label">Ficha Socioeconómica</span>
+    </div>
+  </div>
+
+  {% if not puede_editar and postulante %}
+  <div class="alert alert-warning border-0 rounded-3 mb-4">
+    <i class="bi bi-lock me-2"></i>
+    Tu información está <strong>bloqueada</strong> porque la convocatoria está cerrada o ya fuiste evaluado.
+  </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    <!-- Sección 1: Datos Personales -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <i class="bi bi-person-vcard me-2 text-primary"></i>Datos Personales
+      </div>
+      <div class="card-body p-4">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">{{ form.nombre_completo.label }} *</label>
+            {{ form.nombre_completo }}
+            {% if form.nombre_completo.errors %}
+            <div class="text-danger small mt-1">{{ form.nombre_completo.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ form.cedula.label }} *</label>
+            {{ form.cedula }}
+            {% if form.cedula.errors %}
+            <div class="text-danger small mt-1">{{ form.cedula.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ form.telefono.label }}</label>
+            {{ form.telefono }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ form.fecha_nacimiento.label }}</label>
+            {{ form.fecha_nacimiento }}
+          </div>
+          <div class="col-12">
+            <label class="form-label">{{ form.direccion.label }}</label>
+            {{ form.direccion }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección 2: Requisitos Documentales -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <i class="bi bi-folder2-open me-2 text-primary"></i>Requisitos Documentales
+        <span class="badge text-bg-warning ms-2 text-dark">Obligatorios</span>
+      </div>
+      <div class="card-body p-4">
+        <p class="text-muted small mb-4">
+          <i class="bi bi-info-circle me-1"></i>
+          Sube los siguientes documentos en formato PDF o imagen (JPG, PNG). Tamaño máximo: 5 MB por archivo.
+        </p>
+
+        <!-- Boleta de inscripción -->
+        <div class="border rounded-3 p-3 mb-3 d-flex align-items-center gap-3">
+          <div class="flex-shrink-0 bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+            <i class="bi bi-file-earmark-text text-primary fs-5"></i>
+          </div>
+          <div class="flex-grow-1">
+            <label class="form-label fw-bold mb-1">{{ form.archivo_boleta_inscripcion.label }}</label>
+            {{ form.archivo_boleta_inscripcion }}
+            {% if postulante.archivo_boleta_inscripcion %}
+            <div class="mt-1">
+              <a href="{{ postulante.archivo_boleta_inscripcion.url }}" target="_blank" class="text-success small">
+                <i class="bi bi-check-circle me-1"></i>Archivo ya subido — Click para ver
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Histórico académico -->
+        <div class="border rounded-3 p-3 mb-3 d-flex align-items-center gap-3">
+          <div class="flex-shrink-0 bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+            <i class="bi bi-mortarboard text-success fs-5"></i>
+          </div>
+          <div class="flex-grow-1">
+            <label class="form-label fw-bold mb-1">{{ form.archivo_historico_academico.label }}</label>
+            {{ form.archivo_historico_academico }}
+            {% if postulante.archivo_historico_academico %}
+            <div class="mt-1">
+              <a href="{{ postulante.archivo_historico_academico.url }}" target="_blank" class="text-success small">
+                <i class="bi bi-check-circle me-1"></i>Archivo ya subido — Click para ver
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Carnet de identidad -->
+        <div class="border rounded-3 p-3 mb-3 d-flex align-items-center gap-3">
+          <div class="flex-shrink-0 bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+            <i class="bi bi-person-badge text-warning fs-5"></i>
+          </div>
+          <div class="flex-grow-1">
+            <label class="form-label fw-bold mb-1">{{ form.archivo_carnet_identidad.label }}</label>
+            {{ form.archivo_carnet_identidad }}
+            {% if postulante.archivo_carnet_identidad %}
+            <div class="mt-1">
+              <a href="{{ postulante.archivo_carnet_identidad.url }}" target="_blank" class="text-success small">
+                <i class="bi bi-check-circle me-1"></i>Archivo ya subido — Click para ver
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    {% if puede_editar or not postulante %}
+    <div class="d-flex justify-content-between mb-5">
+      <a href="{% url 'postulantes:panel' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Volver
+      </a>
+      <button type="submit" class="btn btn-primary px-4">
+        Guardar y continuar <i class="bi bi-arrow-right ms-1"></i>
+      </button>
+    </div>
+    {% else %}
+    <div class="text-end mb-5">
+      <a href="{% url 'postulantes:panel' %}" class="btn btn-outline-primary">
+        <i class="bi bi-house me-1"></i>Ir al panel
+      </a>
+    </div>
+    {% endif %}
+
+  </form>
+</div>
+{% endblock %}

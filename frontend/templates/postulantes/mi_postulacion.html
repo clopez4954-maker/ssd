@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Mi Postulación - Beca Albergue{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="max-width-800 mx-auto">
+    <!-- Estado de la solicitud -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+      {% if not estado_postulacion.is_completa %}
+        <div class="card-body p-5 text-center bg-warning-subtle text-dark">
+          <div class="display-3 text-warning mb-3"><i class="bi bi-exclamation-triangle-fill"></i></div>
+          <h2 class="fw-bold">Postulación Incompleta</h2>
+          <p class="mb-4 text-muted">Tu postulación se encuentra en proceso. Debes completar todos los requisitos obligatorios para que sea evaluada por el comité de becas.</p>
+          
+          <div class="d-flex justify-content-center gap-3 flex-wrap mb-4">
+            <div class="px-3 py-2 rounded-3 border {% if estado_postulacion.ficha_completa %}bg-success-subtle text-success border-success{% else %}bg-danger-subtle text-danger border-danger{% endif %}">
+              <i class="bi {% if estado_postulacion.ficha_completa %}bi-check-circle-fill{% else %}bi-x-circle-fill{% endif %} me-2"></i>
+              Ficha Socioeconómica
+            </div>
+            <div class="px-3 py-2 rounded-3 border {% if estado_postulacion.tiene_materias %}bg-success-subtle text-success border-success{% else %}bg-danger-subtle text-danger border-danger{% endif %}">
+              <i class="bi {% if estado_postulacion.tiene_materias %}bi-check-circle-fill{% else %}bi-x-circle-fill{% endif %} me-2"></i>
+              Materias Cursadas
+            </div>
+
+          </div>
+          
+          <a href="{% url 'postulantes:panel' %}" class="btn btn-primary rounded-pill px-4 fw-bold shadow">
+            <i class="bi bi-arrow-left-circle-fill me-2"></i>Ir a Mi Panel para Completar
+          </a>
+        </div>
+      {% else %}
+        {% if solicitud_beca.estado == 'Beca Asignada' %}
+          <div class="card-body p-5 text-center bg-success text-white">
+            <div class="display-3 mb-3"><i class="bi bi-trophy-fill text-warning"></i></div>
+            <h2 class="fw-bold">¡Felicidades! Beca Asignada</h2>
+            <p class="mb-0 opacity-75">Has sido seleccionado como beneficiario de la Beca Albergue para esta gestión.</p>
+            <small class="opacity-50">Fecha de asignación: {{ solicitud_beca.fecha_asignacion|date:"d M Y, H:i" }}</small>
+          </div>
+        {% elif solicitud_beca.rechazado %}
+          <div class="card-body p-5 text-center bg-danger text-white">
+            <div class="display-3 mb-3"><i class="bi bi-exclamation-octagon-fill text-warning"></i></div>
+            <h2 class="fw-bold">Postulación Rechazada</h2>
+            <p class="mb-3 opacity-90">Tu postulación ha sido rechazada por el comité de evaluación debido al siguiente motivo:</p>
+            <div class="bg-white text-dark rounded p-3 mb-3 text-start mx-auto" style="max-width: 600px;">
+              <h6 class="fw-semibold mb-2"><i class="bi bi-info-circle me-1"></i> Motivo indicado:</h6>
+              <p class="mb-0 small text-muted">{{ solicitud_beca.motivo_rechazo }}</p>
+            </div>
+            <p class="mb-0 small opacity-75">Por favor, comunícate con la administración si requieres más información.</p>
+          </div>
+        {% elif solicitud_beca.estado == 'No seleccionado' %}
+          <div class="card-body p-5 text-center bg-secondary text-white">
+            <div class="display-3 mb-3"><i class="bi bi-x-circle-fill"></i></div>
+            <h2 class="fw-bold">Postulación Finalizada</h2>
+            <p class="mb-0 opacity-75">Lamentamos informarte que no has sido seleccionado dentro de los cupos de esta convocatoria.</p>
+          </div>
+        {% elif solicitud_beca.estado == 'Aprobado' %}
+          <div class="card-body p-5 text-center bg-light">
+            <div class="display-3 text-success mb-3"><i class="bi bi-patch-check-fill text-success"></i></div>
+            <h2 class="fw-bold text-dark">Postulación Aprobada</h2>
+            <p class="mb-0 text-muted">Tu documentación e historial académico han sido validados correctamente. Tu postulación está lista para el proceso de asignación.</p>
+            <span class="badge bg-success px-3 py-2 mt-3 text-uppercase font-monospace">Revisión Completada</span>
+          </div>
+        {% else %}
+          <div class="card-body p-5 text-center bg-light">
+            <div class="display-3 text-success mb-3"><i class="bi bi-check-circle-fill animate-scale"></i></div>
+            <h2 class="fw-bold text-dark">Postulación Recibida y Completada</h2>
+            <p class="mb-0 text-muted">Tu postulación está completa y guardada en el sistema. Pronto se realizará la optimización de cupos.</p>
+            <span class="badge bg-success px-3 py-2 mt-3 text-uppercase font-monospace">En Espera de Selección</span>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <!-- Puntajes -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 text-center h-100 p-3">
+          <div class="card-body">
+            <h6 class="text-uppercase text-muted small fw-bold">Puntaje Académico</h6>
+            <div class="display-5 fw-bold text-info mt-2">{{ solicitud_beca.puntaje_academico|default:"0.0" }}</div>
+            <small class="text-muted">Máximo 30 puntos</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 text-center h-100 p-3">
+          <div class="card-body">
+            <h6 class="text-uppercase text-muted small fw-bold">Puntaje Socioeconómico</h6>
+            <div class="display-5 fw-bold text-primary mt-2">{{ solicitud_beca.puntaje_socioeconomico|default:"0.0" }}</div>
+            <small class="text-muted">Máximo 70 puntos</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 text-center h-100 p-3 bg-light-primary">
+          <div class="card-body">
+            <h6 class="text-uppercase text-primary small fw-bold">Puntaje Total (Z)</h6>
+            <div class="display-5 fw-bold text-primary mt-2">{{ solicitud_beca.puntaje_total|default:"0.0" }}</div>
+            <small class="text-primary opacity-75">Máximo 100 puntos</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalles del Registro -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-4">
+        <h5 class="card-title text-dark fw-bold border-bottom pb-2 mb-3">
+          Resumen de tu Declaración Jurada
+        </h5>
+
+        <h6 class="fw-bold text-info mt-3"><i class="bi bi-mortarboard me-1"></i> Aspectos Académicos</h6>
+        <div class="row g-3 small mb-4">
+          <div class="col-md-6">
+            <span class="text-muted">Promedio Ponderado Acumulado (PPA):</span>
+            <div class="fw-semibold text-dark">{{ datos_academicos.ppa|floatformat:2|default:"0.00" }}</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Materias Aprobadas:</span>
+            <div class="fw-semibold text-dark">{{ datos_academicos.materias_aprobadas|default:"0" }} materias</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Puntaje por PPA:</span>
+            <div class="fw-semibold text-dark">{{ datos_academicos.puntaje_ppa|floatformat:1|default:"0.0" }} pts</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Puntaje por Materias Aprobadas:</span>
+            <div class="fw-semibold text-dark">{{ datos_academicos.puntaje_materias|floatformat:1|default:"0.0" }} pts</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Puntaje Académico Total:</span>
+            <div class="fw-bold text-primary">{{ datos_academicos.puntaje_academico_total|floatformat:1|default:"0.0" }} / 30.0 pts</div>
+          </div>
+          {% if datos_academicos.certificado_notas_pdf %}
+          <div class="col-md-6">
+            <span class="text-muted">Certificado Adjunto:</span>
+            <div>
+              <a href="{{ datos_academicos.certificado_notas_pdf.url }}" target="_blank" class="btn btn-sm btn-link p-0 text-decoration-none">
+                <i class="bi bi-file-earmark-pdf-fill text-danger"></i> Ver Certificado (PDF)
+              </a>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <h6 class="fw-bold text-primary mt-3"><i class="bi bi-house-door me-1"></i> Aspectos Socioeconómicos</h6>
+        <div class="row g-3 small">
+          <div class="col-md-6">
+            <span class="text-muted">Dependencia Económica (X1):</span>
+            <div class="fw-semibold text-dark">{{ ficha_socioeconomica.dependencia }}</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Tipo de Ocupación (X2):</span>
+            <div class="fw-semibold text-dark">{{ ficha_socioeconomica.ocupacion }}</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Rango de Ingresos (X3):</span>
+            <div class="fw-semibold text-dark">{{ ficha_socioeconomica.rango_ingresos }}</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Integrantes Familiares (X4):</span>
+            <div class="fw-semibold text-dark">{{ ficha_socioeconomica.num_integrantes }} miembros</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Hijos (X5):</span>
+            <div class="fw-semibold text-dark">{{ ficha_socioeconomica.num_hijos }} hijo(s)</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Lugar de Residencia (X6):</span>
+            <div class="fw-semibold text-dark">{{ ficha_socioeconomica.lugar_residencia }}</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Tenencia de Vivienda (X7):</span>
+            <div class="fw-semibold text-dark">{{ ficha_socioeconomica.tenencia_vivienda }}</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Tipo de Vivienda (X8):</span>
+            <div class="fw-semibold text-dark">{{ ficha_socioeconomica.tipo_vivienda }}</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Lugar de Procedencia (X9):</span>
+            <div class="fw-semibold text-dark">{{ ficha_socioeconomica.procedencia }}</div>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted">Otros Beneficios:</span>
+            <div class="fw-semibold text-dark">
+              {% if ficha_socioeconomica.otro_beneficio %}
+                Tiene otro beneficio ({{ ficha_socioeconomica.descripcion_otro_beneficio }})
+              {% else %}
+                Sin otros beneficios
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .max-width-800 {
+    max-width: 800px;
+  }
+  .bg-light-primary {
+    background-color: rgba(13, 110, 253, 0.08);
+  }
+</style>
+{% endblock %}

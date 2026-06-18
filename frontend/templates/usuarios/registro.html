@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Registro de Postulante{% endblock %}
+{% block main_class %}{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card fade-in" style="max-width:750px">
+    <div class="text-center mb-4">
+      <div class="auth-logo mb-2"><i class="bi bi-person-plus-fill"></i></div>
+      <h1 class="auth-title">Crear Cuenta</h1>
+      <p class="auth-subtitle">Regístrate para iniciar tu proceso de postulación a becas</p>
+    </div>
+
+    <form method="post" autocomplete="off">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger border-0 rounded-3 small mb-3">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        {{ form.non_field_errors|join:", " }}
+      </div>
+      {% endif %}
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="{{ form.first_name.id_for_label }}">Nombres *</label>
+          {{ form.first_name }}
+          {% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors|join:", " }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="{{ form.last_name.id_for_label }}">Apellidos *</label>
+          {{ form.last_name }}
+          {% if form.last_name.errors %}<div class="text-danger small mt-1">{{ form.last_name.errors|join:", " }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="{{ form.username.id_for_label }}">Número de Registro Universitario *</label>
+          {{ form.username }}
+          <div class="form-text text-muted small">Será tu nombre de usuario para ingresar al sistema.</div>
+          {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors|join:", " }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="{{ form.telefono.id_for_label }}">Número de Celular *</label>
+          {{ form.telefono }}
+          {% if form.telefono.errors %}<div class="text-danger small mt-1">{{ form.telefono.errors|join:", " }}</div>{% endif %}
+        </div>
+        <div class="col-md-12">
+          <label class="form-label" for="{{ form.email.id_for_label }}">Correo electrónico (opcional)</label>
+          {{ form.email }}
+          {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors|join:", " }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="{{ form.password1.id_for_label }}">Contraseña *</label>
+          <div class="input-group">
+            {{ form.password1 }}
+            <button class="btn btn-light border" type="button" id="togglePwd1">
+              <i class="bi bi-eye" id="eyeIcon1"></i>
+            </button>
+          </div>
+          {% if form.password1.help_text %}
+            <div class="form-text text-muted small" style="font-size: 0.75rem;">
+              {{ form.password1.help_text|safe }}
+            </div>
+          {% endif %}
+          {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors|join:", " }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="{{ form.password2.id_for_label }}">Confirmar Contraseña *</label>
+          <div class="input-group">
+            {{ form.password2 }}
+            <button class="btn btn-light border" type="button" id="togglePwd2">
+              <i class="bi bi-eye" id="eyeIcon2"></i>
+            </button>
+          </div>
+          {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors|join:", " }}</div>{% endif %}
+        </div>
+      </div>
+
+      <div class="d-grid mt-4">
+        <button type="submit" class="btn btn-primary btn-lg fw-semibold">
+          <i class="bi bi-person-plus me-2"></i>Registrarse
+        </button>
+      </div>
+    </form>
+
+    <hr class="my-4">
+    <div class="text-center">
+      <p class="text-muted small mb-0">¿Ya tienes una cuenta?
+        <a href="{% url 'usuarios:login' %}" class="fw-semibold">Iniciar sesión</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('togglePwd1').addEventListener('click', function() {
+    const pwd = document.getElementById('{{ form.password1.id_for_label }}');
+    const icon = document.getElementById('eyeIcon1');
+    if (pwd.type === 'password') {
+      pwd.type = 'text';
+      icon.className = 'bi bi-eye-slash';
+    } else {
+      pwd.type = 'password';
+      icon.className = 'bi bi-eye';
+    }
+  });
+
+  document.getElementById('togglePwd2').addEventListener('click', function() {
+    const pwd = document.getElementById('{{ form.password2.id_for_label }}');
+    const icon = document.getElementById('eyeIcon2');
+    if (pwd.type === 'password') {
+      pwd.type = 'text';
+      icon.className = 'bi bi-eye-slash';
+    } else {
+      pwd.type = 'password';
+      icon.className = 'bi bi-eye';
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,601 @@
+{% extends "base.html" %}
+
+{% block title %}FICHA DE ESTUDIO SOCIOECONÓMICO - IDH{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Diseño premium para el formulario oficial */
+  .ficha-container {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    color: #1e293b;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .ficha-header {
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+  }
+  .ficha-logo-placeholder {
+    font-weight: 800;
+    font-size: 1.1rem;
+    line-height: 1.2;
+    text-transform: uppercase;
+    border: 2px solid #0f172a;
+    padding: 8px 12px;
+    text-align: center;
+    border-radius: 6px;
+    background-color: #f8fafc;
+    color: #0f172a;
+    display: inline-block;
+  }
+  .ficha-seccion-titulo {
+    background-color: #f1f5f9;
+    border-left: 4px solid #0f172a;
+    color: #0f172a;
+    font-weight: 700;
+    padding: 10px 15px;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+  }
+  .ficha-field-group {
+    margin-bottom: 15px;
+  }
+  .ficha-label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+    display: block;
+  }
+  .ficha-input-readonly {
+    background-color: #f8fafc !important;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+  }
+  .ficha-input-edit {
+    border: 1px solid #cbd5e1;
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+  .ficha-input-edit:focus {
+    border-color: #0f172a;
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+    outline: none;
+  }
+  .asterisk-required {
+    color: #ef4444;
+    font-weight: bold;
+  }
+  .table-familiar th {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0 !important;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #475569;
+    font-weight: 700;
+  }
+  .table-familiar td {
+    border: 1px solid #e2e8f0 !important;
+    padding: 6px !important;
+  }
+  .table-familiar input, .table-familiar select {
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    padding: 6px;
+    width: 100%;
+    transition: all 0.2s ease;
+  }
+  .table-familiar input:focus, .table-familiar select:focus {
+    border-color: #0f172a;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.05);
+    outline: none;
+  }
+  .firma-section {
+    margin-top: 50px;
+    border-top: 1px dashed #cbd5e1;
+    padding-top: 30px;
+  }
+  .firma-linea {
+    border-top: 1px solid #0f172a;
+    width: 70%;
+    margin: 40px auto 10px auto;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="max-width-900 mx-auto">
+    
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      
+      <div class="ficha-container rounded-3">
+        <!-- Encabezado Ficha Oficial -->
+        <div class="ficha-header">
+          <div class="row align-items-center">
+            <div class="col-md-3">
+              <div class="ficha-logo-placeholder">
+                U.A.G.R.M.<br>
+                <span style="font-size: 0.7rem;">Valles Cruceños</span>
+              </div>
+            </div>
+            <div class="col-md-6 text-center">
+              <h4 class="fw-bold mb-1" style="letter-spacing: 1px;">DIRECCIÓN DE BIENESTAR SOCIAL</h4>
+              <h5 class="fw-bold mb-0" style="font-size: 1.1rem; text-decoration: underline;">FICHA DE ESTUDIO SOCIOECONÓMICO - IDH</h5>
+            </div>
+            <div class="col-md-3 text-end">
+              <small class="text-muted font-monospace">C.I.: <strong>{{ postulante.cedula|default:"N/A" }}</strong></small>
+            </div>
+          </div>
+        </div>
+
+        {% if form_ficha.errors or form_acad.errors or formset.errors %}
+          <div class="alert alert-danger border-0 rounded-0 shadow-sm mb-4">
+            <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Por favor corrige los errores del formulario:</h6>
+            <ul class="mb-0 small">
+              {% for field, errors in form_ficha.errors.items %}
+                <li><strong>{{ field.label|default:field }}:</strong> {{ errors|join:", " }}</li>
+              {% endfor %}
+              {% for field, errors in form_acad.errors.items %}
+                <li><strong>{{ field.label|default:field }}:</strong> {{ errors|join:", " }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <!-- 1° DATOS DEL POSTULANTE -->
+        <div class="ficha-seccion-titulo">1° DATOS PERSONALES DEL POSTULANTE</div>
+        <div class="row g-3">
+          <div class="col-md-8">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Nombre Completo</label>
+              <input type="text" class="form-control ficha-input-readonly" value="{{ request.user.get_full_name|default:postulante.nombre_completo }}" readonly>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Cédula de Identidad</label>
+              <input type="text" class="form-control ficha-input-readonly" value="{{ postulante.cedula }}" readonly>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Facultad</label>
+              <input type="text" class="form-control ficha-input-readonly" value="{{ postulante.facultad|default:'Facultad Integral de los Valles Cruceños' }}" readonly>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Carrera <span class="asterisk-required">*</span></label>
+              <select class="form-select ficha-input-edit" name="carrera" required>
+                <option value="" disabled {% if not postulante.carrera %}selected{% endif %}>Seleccione su carrera...</option>
+                <option value="Ing. en Sistemas" {% if postulante.carrera == "Ing. en Sistemas" %}selected{% endif %}>Ing. en Sistemas</option>
+                <option value="Ing. en Agropecuaria" {% if postulante.carrera == "Ing. en Agropecuaria" %}selected{% endif %}>Ing. en Agropecuaria</option>
+                <option value="Lic. en Contaduría" {% if postulante.carrera == "Lic. en Contaduría" %}selected{% endif %}>Lic. en Contaduría</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Celular Personal</label>
+              <input type="text" class="form-control ficha-input-readonly" value="{{ postulante.telefono }}" readonly>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Teléfono de Referencia</label>
+              <input type="text" class="form-control ficha-input-readonly" value="{{ postulante.solicitud_verificacion.telefono|default:'—' }}" readonly>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2° DEPENDENCIA ECONÓMICA -->
+        <div class="ficha-seccion-titulo">2° DEPENDENCIA ECONÓMICA Y SITUACIÓN LABORAL</div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">{{ form_ficha.dependencia.label }} <span class="asterisk-required">*</span></label>
+              {{ form_ficha.dependencia }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">{{ form_ficha.ocupacion.label }} <span class="asterisk-required">*</span></label>
+              {{ form_ficha.ocupacion }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">{{ form_ficha.rango_ingresos.label }} <span class="asterisk-required">*</span></label>
+              {{ form_ficha.rango_ingresos }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Respaldo Ocupación (Opcional)</label>
+              {{ form_ficha.doc_ocupacion }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 3° GRUPO FAMILIAR -->
+        <div class="ficha-seccion-titulo">3° GRUPO FAMILIAR</div>
+        <div class="row g-3 align-items-end mb-3">
+          <div class="col-md-6">
+            <div class="ficha-field-group mb-0">
+              <label class="ficha-label">{{ form_ficha.num_integrantes.label }} <span class="asterisk-required">*</span></label>
+              {{ form_ficha.num_integrantes }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="ficha-field-group mb-0">
+              <label class="ficha-label">{{ form_ficha.num_hijos.label }} <span class="asterisk-required">*</span></label>
+              {{ form_ficha.num_hijos }}
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="ficha-label d-block mb-2">Cuadro de Integrantes del Grupo Familiar (Excluyéndose usted)</label>
+          <div class="table-responsive">
+            {{ formset.management_form }}
+            <table class="table table-bordered table-familiar align-middle mb-2 text-center" id="familiares-table">
+              <thead>
+                <tr>
+                  <th style="width: 5%;">N°</th>
+                  <th style="width: 30%;">Nombre Completo</th>
+                  <th style="width: 20%;">Parentesco</th>
+                  <th style="width: 10%;">Edad</th>
+                  <th style="width: 15%;">Ocupación</th>
+                  <th style="width: 10%;">Observación</th>
+                  <th style="width: 10%;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="familiar-tbody">
+                {% for f_form in formset %}
+                  <tr class="familiar-row">
+                    <td class="row-number">{{ forloop.counter }}</td>
+                    {{ f_form.id }}
+                    <td>{{ f_form.nombre_completo }}</td>
+                    <td>{{ f_form.parentesco }}</td>
+                    <td>{{ f_form.copy_edad|default:f_form.edad }}</td>
+                    <td>{{ f_form.ocupacion }}</td>
+                    <td>{{ f_form.observacion }}</td>
+                    <td>
+                      <button type="button" class="btn btn-sm btn-danger eliminar-familiar-btn">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                      <div style="display:none;">
+                        {{ f_form.DELETE }}
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <div class="text-end">
+              <button type="button" class="btn btn-sm btn-outline-dark" id="add-familiar-btn" style="border-radius: 0;">
+                <i class="bi bi-plus-lg"></i> AGREGAR MIEMBRO
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plantilla oculta de familiar -->
+        <table style="display:none;">
+          <tbody id="empty-form-template">
+            <tr class="familiar-row">
+              <td class="row-number">#</td>
+              {{ formset.empty_form.id }}
+              <td>{{ formset.empty_form.nombre_completo }}</td>
+              <td>{{ formset.empty_form.parentesco }}</td>
+              <td>{{ formset.empty_form.edad }}</td>
+              <td>{{ formset.empty_form.ocupacion }}</td>
+              <td>{{ formset.empty_form.observacion }}</td>
+              <td>
+                <button type="button" class="btn btn-sm btn-danger eliminar-familiar-btn">
+                  <i class="bi bi-trash"></i>
+                </button>
+                <div style="display:none;">
+                  {{ formset.empty_form.DELETE }}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 4° DE LA PROCEDENCIA -->
+        <div class="ficha-seccion-titulo">4° DE LA PROCEDENCIA</div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">{{ form_ficha.procedencia.label }} <span class="asterisk-required">*</span></label>
+              {{ form_ficha.procedencia }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Respaldo Procedencia (Opcional)</label>
+              {{ form_ficha.doc_ingresos }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 5° DE LA RESIDENCIA -->
+        <div class="ficha-seccion-titulo">5° DE LA RESIDENCIA ACTUAL</div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">{{ form_ficha.lugar_residencia.label }} <span class="asterisk-required">*</span></label>
+              {{ form_ficha.lugar_residencia }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Provincia / Municipio</label>
+              <input type="text" class="form-control ficha-input-edit" name="provincia_residencia" placeholder="Ej. Florida - Mairana">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Zona o Anillo</label>
+              <input type="text" class="form-control ficha-input-edit" name="zona_anillo" placeholder="Ej. Barrio Lindo">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Barrio</label>
+              <input type="text" class="form-control ficha-input-edit" name="barrio" placeholder="Ej. Central">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Calle / Avenida</label>
+              <input type="text" class="form-control ficha-input-edit" name="calle" placeholder="Ej. Calle Avaroa N° 45">
+            </div>
+          </div>
+        </div>
+
+        <!-- 6° TENENCIA DE VIVIENDA -->
+        <div class="ficha-seccion-titulo">6° TENENCIA DE VIVIENDA</div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">{{ form_ficha.tenencia_vivienda.label }} <span class="asterisk-required">*</span></label>
+              {{ form_ficha.tenencia_vivienda }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Respaldo Tenencia / Vivienda (Opcional)</label>
+              {{ form_ficha.doc_vivienda }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 7° INFRAESTRUCTURA DE VIVIENDA -->
+        <div class="ficha-seccion-titulo">7° INFRAESTRUCTURA DE LA VIVIENDA</div>
+        <div class="row g-3">
+          <div class="col-md-12">
+            <div class="ficha-field-group">
+              <label class="ficha-label">{{ form_ficha.tipo_vivienda.label }} <span class="asterisk-required">*</span></label>
+              {{ form_ficha.tipo_vivienda }}
+            </div>
+          </div>
+          <div class="col-md-2 col-4">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Dormitorios</label>
+              <input type="number" class="form-control ficha-input-edit" name="cant_dormitorios" value="1" min="1">
+            </div>
+          </div>
+          <div class="col-md-2 col-4">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Baños</label>
+              <input type="number" class="form-control ficha-input-edit" name="cant_banos" value="1" min="0">
+            </div>
+          </div>
+          <div class="col-md-2 col-4">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Comedores</label>
+              <input type="number" class="form-control ficha-input-edit" name="cant_comedores" value="0" min="0">
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Salas</label>
+              <input type="number" class="form-control ficha-input-edit" name="cant_salas" value="0" min="0">
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="ficha-field-group">
+              <label class="ficha-label">Patios</label>
+              <input type="number" class="form-control ficha-input-edit" name="cant_patios" value="0" min="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- 8° ¿TIENE OTRO BENEFICIO? -->
+        <div class="ficha-seccion-titulo">8° OTROS BENEFICIOS DENTRO DE LA UNIVERSIDAD</div>
+        <div class="row g-3 align-items-center">
+          <div class="col-md-4">
+            <div class="form-check form-switch mt-2">
+              {{ form_ficha.otro_beneficio }}
+              <label class="form-check-label fw-bold" for="otro_beneficio">{{ form_ficha.otro_beneficio.label }}</label>
+            </div>
+          </div>
+          <div class="col-md-8" id="beneficio_input_container" style="display: none;">
+            <div class="ficha-field-group mb-0">
+              <label class="ficha-label">{{ form_ficha.descripcion_otro_beneficio.label }}</label>
+              {{ form_ficha.descripcion_otro_beneficio }}
+            </div>
+          </div>
+        </div>
+
+
+        <!-- 9° ACLARACIÓN O COMENTARIO PERSONAL -->
+        <div class="ficha-seccion-titulo">9° ACLARACIÓN O COMENTARIO PERSONAL</div>
+        <div class="ficha-field-group">
+          <textarea class="form-control ficha-input-edit" name="comentarios" rows="3" placeholder="Redacte cualquier observación o aclaración sobre su situación socioeconómica si es necesario..."></textarea>
+        </div>
+
+        <!-- Requisitos Físicos / Digitales Obligatorios de la convocatoria -->
+        <div class="ficha-seccion-titulo">REQUISITOS ADJUNTOS OBLIGATORIOS</div>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="ficha-field-group">
+              <label class="ficha-label">{{ form_ficha.archivo_boleta_inscripcion.label }} <span class="asterisk-required">*</span></label>
+              {{ form_ficha.archivo_boleta_inscripcion }}
+              {% if form_ficha.instance.archivo_boleta_inscripcion %}
+                <div class="mt-2 small text-success font-monospace">[✓ Archivo cargado]</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="ficha-field-group">
+              <label class="ficha-label">{{ form_ficha.archivo_historico_academico.label }} <span class="asterisk-required">*</span></label>
+              {{ form_ficha.archivo_historico_academico }}
+              {% if form_ficha.instance.archivo_historico_academico %}
+                <div class="mt-2 small text-success font-monospace">[✓ Archivo cargado]</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="ficha-field-group">
+              <label class="ficha-label">{{ form_ficha.archivo_carnet_identidad.label }} <span class="asterisk-required">*</span></label>
+              {{ form_ficha.archivo_carnet_identidad }}
+              {% if form_ficha.instance.archivo_carnet_identidad %}
+                <div class="mt-2 small text-success font-monospace font-monospace">[✓ Archivo cargado]</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- DECLARACIÓN VOLUNTARIA -->
+        <div class="ficha-seccion-titulo">DECLARACIÓN JURADA VOLUNTARIA</div>
+        <div class="p-3 border border-dark bg-light mb-4">
+          <p class="small mb-0 text-justify" style="line-height: 1.5; font-size: 0.8rem;">
+            YO, <strong>{{ request.user.get_full_name|upper|default:postulante.nombre_completo|upper }}</strong>, IDENTIFICADO CON C.I. <strong>{{ postulante.cedula }}</strong>, DECLARO BAJO JURAMENTO QUE TODOS LOS DATOS E INFORMACIÓN SUMINISTRADA EN LA PRESENTE FICHA SON DE CARÁCTER FIDEDIGNO Y CORRESPONDEN CON LA VERDAD. AUTORIZO A LA DIRECCIÓN DE BIENESTAR SOCIAL DE LA U.A.G.R.M. A VERIFICAR LA VERACIDAD DE LOS MISMOS POR LOS MEDIOS QUE CONSIDERE PERTINENTES.
+          </p>
+        </div>
+
+
+
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'postulantes:panel' %}" class="btn btn-lg btn-outline-dark px-4" style="border-radius: 0;">
+          CANCELAR
+        </a>
+        {% if puede_editar %}
+          <button type="submit" class="btn btn-lg btn-dark px-5" style="border-radius: 0;">
+            ENVIAR POSTULACIÓN
+          </button>
+        {% else %}
+          <a href="{% url 'postulantes:mi_postulacion' %}" class="btn btn-lg btn-dark px-4" style="border-radius: 0;">
+            VER MI POSTULACIÓN
+          </a>
+        {% endif %}
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Controlar visibilidad del campo descriptivo de otro beneficio
+    const switchBeneficio = document.getElementById('otro_beneficio');
+    const containerBeneficio = document.getElementById('beneficio_input_container');
+
+    function toggleBeneficio() {
+        if (switchBeneficio && switchBeneficio.checked) {
+            containerBeneficio.style.display = 'block';
+        } else if (containerBeneficio) {
+            containerBeneficio.style.display = 'none';
+        }
+    }
+
+    if (switchBeneficio) {
+        switchBeneficio.addEventListener('change', toggleBeneficio);
+        toggleBeneficio();
+    }
+
+    // Agregar y eliminar filas dinámicas a la tabla del grupo familiar
+    const addBtn = document.getElementById('add-familiar-btn');
+    const tbody = document.getElementById('familiar-tbody');
+    const emptyTemplate = document.getElementById('empty-form-template').innerHTML;
+    const totalFormsInput = document.getElementById('id_miembros_familiares-TOTAL_FORMS');
+
+    function recalculateRowNumbers() {
+        let index = 1;
+        tbody.querySelectorAll('.familiar-row').forEach(row => {
+            if (row.style.display !== 'none') {
+                const numCell = row.querySelector('.row-number');
+                if (numCell) {
+                    numCell.textContent = index++;
+                }
+            }
+        });
+    }
+
+    if (addBtn && tbody && totalFormsInput) {
+        addBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const currentFormCount = parseInt(totalFormsInput.value);
+            let newRowHtml = emptyTemplate.replace(/__prefix__/g, currentFormCount);
+            tbody.insertAdjacentHTML('beforeend', newRowHtml);
+            totalFormsInput.value = currentFormCount + 1;
+            recalculateRowNumbers();
+        });
+
+        tbody.addEventListener('click', function(e) {
+            const btn = e.target.closest('.eliminar-familiar-btn');
+            if (btn) {
+                e.preventDefault();
+                if (confirm('¿Estás seguro de eliminar este miembro familiar?')) {
+                    const row = btn.closest('.familiar-row');
+                    const deleteInput = row.querySelector('input[name$="-DELETE"]');
+                    const idInput = row.querySelector('input[name$="-id"]');
+                    
+                    if (idInput && !idInput.value) {
+                        // Unsaved row: remove it from DOM directly
+                        row.remove();
+                    } else if (deleteInput) {
+                        // Saved row: mark DELETE as checked and hide it
+                        deleteInput.checked = true;
+                        row.style.display = 'none';
+                    } else {
+                        row.remove();
+                    }
+                    recalculateRowNumbers();
+                }
+            }
+        });
+
+        // Run initially to ensure correct sequential numbering
+        recalculateRowNumbers();
+    }
+});
+</script>
+{% endblock %}

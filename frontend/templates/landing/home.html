@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Beca Albergue Universitario | Facultad Integral de los Valles Cruceños{% endblock %}
+
+{% block main_class %}{% endblock %}
+
+{% block content %}
+<!-- Custom styles for UAGRM / Faculty Theme (Blue, Red, Gold) -->
+<style>
+  html {
+    scroll-behavior: smooth;
+  }
+  :root {
+    --uagrm-blue: #003366;
+    --uagrm-red: #b30000;
+    --uagrm-gold: #FFD700;
+    --bg-navy: #002244;
+    --bg-navy-light: #003366;
+    --accent-gold: #FFD700;
+  }
+
+  /* Override theme colors for UAGRM palette */
+  .hero-section {
+    background: linear-gradient(135deg, var(--uagrm-blue) 0%, #001a33 100%);
+    position: relative;
+    overflow: hidden;
+    border-bottom: 5px solid var(--uagrm-red);
+  }
+  .hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.15) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .section-title-divider {
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(to right, var(--uagrm-blue), var(--uagrm-red));
+    margin: 15px auto 0;
+    border-radius: 2px;
+  }
+  
+  .requirement-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-left: 4px solid var(--uagrm-red) !important;
+  }
+  .requirement-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08) !important;
+  }
+
+  .timeline-badge {
+    width: 45px;
+    height: 45px;
+    background: var(--uagrm-blue);
+    border: 2px solid var(--uagrm-gold);
+    color: var(--uagrm-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: bold;
+    z-index: 2;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+  .timeline-item {
+    position: relative;
+    padding-left: 3.5rem;
+    padding-bottom: 2.5rem;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 22px;
+    top: 45px;
+    bottom: 0;
+    width: 2px;
+    background: rgba(179, 15, 15, 0.3);
+  }
+  .timeline-item:last-child::before {
+    display: none;
+  }
+  .timeline-item .timeline-badge {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .faq-card {
+    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--bg-navy-light);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .faq-button {
+    background: transparent;
+    color: #fff;
+    border: 0;
+    padding: 1.25rem;
+    font-weight: 600;
+    text-align: left;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .faq-button:not(.collapsed) {
+    color: var(--uagrm-gold);
+    background: rgba(212, 175, 55, 0.05);
+  }
+  .faq-button::after {
+    font-family: "bootstrap-icons";
+    content: "\f282";
+    transition: transform 0.2s;
+  }
+  .faq-button:not(.collapsed)::after {
+    transform: rotate(180deg);
+  }
+  .faq-body {
+    padding: 1.25rem;
+    color: rgba(255,255,255,0.7);
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .btn-gold {
+    background-color: var(--uagrm-gold);
+    border-color: var(--uagrm-gold);
+    color: #000;
+  }
+  .btn-gold:hover {
+    background-color: #bd9a2d;
+    border-color: #bd9a2d;
+    color: #000;
+  }
+
+  .text-red {
+    color: var(--uagrm-red) !important;
+  }
+  .text-blue {
+    color: var(--uagrm-blue) !important;
+  }
+</style>
+
+<!-- ── Sección Hero ─────────────────────────────── -->
+<section id="inicio" class="hero-section text-white py-5 d-flex align-items-center" style="min-height: 80vh;">
+  <div class="container px-4">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-8 text-center text-lg-start">
+
+        <h1 class="display-4 fw-extrabold mb-3">
+          Convocatoria <br><span class="gold-text">Beca Albergue Universitario</span>
+        </h1>
+        <p class="lead mb-4 text-white-50">
+          Un programa diseñado para brindar apoyo y alojamiento a estudiantes de escasos recursos económicos y aquellos que provienen de las provincias de los Valles Cruceños.
+        </p>
+        <div class="d-flex flex-column flex-sm-row justify-content-center justify-content-lg-start gap-3">
+          {% if user.is_authenticated %}
+            <a href="{% url 'postulantes:panel' %}" class="btn btn-gold btn-lg px-4 py-3 fw-bold">
+              <i class="bi bi-speedometer2 me-2"></i>Ir a mi Panel de Postulante
+            </a>
+          {% else %}
+            <a href="{% url 'usuarios:registro' %}" class="btn btn-gold btn-lg px-4 py-3 fw-bold shadow-lg">
+              <i class="bi bi-rocket-takeoff me-2"></i>Iniciar Postulación
+            </a>
+            <a href="#detalles" class="btn btn-outline-light btn-lg px-4 py-3">
+              Ver Convocatoria
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-lg-4 d-none d-lg-block text-center">
+        <!-- Logo grande a la derecha -->
+        <div class="d-inline-block p-4 rounded-circle" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);">
+          <img src="{% static 'img/logo_uagrm.png' %}" alt="Logo UAGRM Escudo" style="height: 250px; width: auto; object-fit: contain; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4));">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Sección Detalles ─────────────────────────── -->
+<section id="detalles" class="py-5 bg-light text-dark">
+  <div class="container px-4 py-4">
+    <div class="text-center mb-5">
+      <h2 class="h1 fw-bold text-blue">Beneficios y Propósito</h2>
+      <p class="text-muted">Acompañamiento integral para estudiantes de provincias</p>
+      <div class="section-title-divider"></div>
+    </div>
+    
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0 p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-primary-subtle text-primary p-3 rounded-3 me-3">
+              <i class="bi bi-house-door-fill fs-3"></i>
+            </div>
+            <h3 class="h5 fw-bold mb-0 text-blue">Alojamiento Seguro</h3>
+          </div>
+          <p class="text-muted mb-0">Acceso a un espacio cómodo, seguro y adecuado para vivir y estudiar durante el ciclo académico vigente.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0 p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-danger-subtle text-danger p-3 rounded-3 me-3">
+              <i class="bi bi-people-fill fs-3"></i>
+            </div>
+            <h3 class="h5 fw-bold mb-0 text-red">Comunidad y Apoyo</h3>
+          </div>
+          <p class="text-muted mb-0">Fomento de una comunidad colaborativa que promueve el crecimiento académico, personal y el apoyo mutuo.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4 mx-auto">
+        <div class="card h-100 shadow-sm border-0 p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-warning-subtle text-warning p-3 rounded-3 me-3">
+              <i class="bi bi-geo-alt-fill fs-3"></i>
+            </div>
+            <h3 class="h5 fw-bold mb-0 text-blue">Prioridad Provincias</h3>
+          </div>
+          <p class="text-muted mb-0">Especialmente diseñado para aquellos estudiantes de escasos recursos económicos que provienen de áreas rurales y provincias distantes.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Sección Requisitos ───────────────────────── -->
+<section id="requisitos" class="py-5 bg-white text-dark">
+  <div class="container px-4 py-4">
+    <div class="text-center mb-5">
+      <h2 class="h1 fw-bold text-blue">Prerrequisitos de Admisión</h2>
+      <p class="text-muted">Documentación y condiciones requeridas para la postulación</p>
+      <div class="section-title-divider"></div>
+    </div>
+    
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="card requirement-card h-100 shadow-sm border-0 p-4">
+          <div class="d-flex gap-3 align-items-start mb-3">
+            <span class="badge bg-navy text-white fs-6 px-2.5 py-1.5 rounded-circle">a</span>
+            <h4 class="h6 fw-bold text-blue mb-0 pt-1">Estudiante Activo</h4>
+          </div>
+          <p class="text-muted mb-0">Ser estudiante activo del 1er. semestre al 9no. semestre con materias inscritas de su carrera de origen en la gestión a postular (presentar boleta de inscripción actual).</p>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="card requirement-card h-100 shadow-sm border-0 p-4">
+          <div class="d-flex gap-3 align-items-start mb-3">
+            <span class="badge bg-navy text-white fs-6 px-2.5 py-1.5 rounded-circle">b</span>
+            <h4 class="h6 fw-bold text-blue mb-0 pt-1">Rendimiento Académico</h4>
+          </div>
+          <p class="text-muted mb-0">Haber aprobado como mínimo la mitad más uno de materias del periodo académico anterior (para alumnos antiguos).</p>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card requirement-card h-100 shadow-sm border-0 p-4">
+          <div class="d-flex gap-3 align-items-start mb-3">
+            <span class="badge bg-navy text-white fs-6 px-2.5 py-1.5 rounded-circle">c</span>
+            <h4 class="h6 fw-bold text-blue mb-0 pt-1">Formulario Oficial</h4>
+          </div>
+          <p class="text-muted mb-0">Formulario (FORM. C.B.S. 001) debidamente llenado, que será proporcionado por la Comisión de Bienestar Social del Consejo Facultativo.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card requirement-card h-100 shadow-sm border-0 p-4">
+          <div class="d-flex gap-3 align-items-start mb-3">
+            <span class="badge bg-navy text-white fs-6 px-2.5 py-1.5 rounded-circle">d</span>
+            <h4 class="h6 fw-bold text-blue mb-0 pt-1">Histórico Académico</h4>
+          </div>
+          <p class="text-muted mb-0">Histórico académico actualizado emitido por el CPD Facultativo.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card requirement-card h-100 shadow-sm border-0 p-4">
+          <div class="d-flex gap-3 align-items-start mb-3">
+            <span class="badge bg-navy text-white fs-6 px-2.5 py-1.5 rounded-circle">e</span>
+            <h4 class="h6 fw-bold text-blue mb-0 pt-1">Identidad Vigente</h4>
+          </div>
+          <p class="text-muted mb-0">Fotocopia de Cédula de Identidad vigente.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card requirement-card h-100 shadow-sm border-0 p-4">
+          <div class="d-flex gap-3 align-items-start mb-3">
+            <span class="badge bg-navy text-white fs-6 px-2.5 py-1.5 rounded-circle">f</span>
+            <h4 class="h6 fw-bold text-blue mb-0 pt-1">Ingreso Nuevos</h4>
+          </div>
+          <p class="text-muted mb-0">Para estudiantes nuevos, se valorará el promedio final de la libreta de 6° de secundaria, además de tomar en cuenta su condición socioeconómica.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ── Sección FAQ ──────────────────────────────── -->
+<section id="faq" class="py-5 text-white" style="background: var(--bg-navy-light);">
+  <div class="container px-4 py-4">
+    <div class="text-center mb-5">
+      <h2 class="h1 fw-bold">Preguntas Frecuentes</h2>
+      <p class="text-white-50">Resuelve tus dudas generales sobre el Albergue</p>
+      <div class="section-title-divider" style="background: var(--uagrm-gold);"></div>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="d-flex flex-column gap-3">
+          
+
+          <div class="faq-card">
+            <button class="faq-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+              ¿Cuáles son los horarios de atención de Decanato?
+            </button>
+            <div id="faq2" class="collapse" data-bs-parent="#faq">
+              <div class="faq-body">
+                Los horarios habilitados para la recepción son en la mañana de 08:00 a 12:00 y por la tarde de 14:00 a 18:00.
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <button class="faq-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+              ¿Qué es el formulario FORM. C.B.S. 001?
+            </button>
+            <div id="faq3" class="collapse" data-bs-parent="#faq">
+              <div class="faq-body">
+                Es el formulario oficial proporcionado por la Comisión de Bienestar Social del Consejo Facultativo para recolectar información socioeconómica detallada del estudiante.
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <button class="faq-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+              ¿Cómo se evalúa a los estudiantes de primer ingreso (nuevos)?
+            </button>
+            <div id="faq4" class="collapse" data-bs-parent="#faq">
+              <div class="faq-body">
+                Para los ingresantes nuevos que aún no cuenten con histórico académico universitario, se valorará el promedio de egreso registrado en su libreta de 6to de secundaria, además de su estrato social e ingresos.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

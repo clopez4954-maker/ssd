@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+{% block title %}Detalle — {{ postulante.nombre_completo }}{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+
+  <!-- Cabecera -->
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <a href="{% url 'evaluaciones:lista' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+      <div>
+        <h1 class="h4 fw-bold mb-0">{{ postulante.nombre_completo }}</h1>
+        <p class="text-muted mb-0 small">CC: {{ postulante.cedula }} · {{ postulante.user.email }}</p>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'evaluaciones:editar_postulante' postulante.pk %}"
+         class="btn btn-outline-warning btn-sm">
+        <i class="bi bi-pencil me-1"></i>Editar datos
+      </a>
+      {% if tiene_datos_completos %}
+      <form method="post" action="{% url 'evaluaciones:evaluar' postulante.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="bi bi-calculator me-1"></i>
+          {% if evaluacion and evaluacion.estado != 'pendiente' %}Reevaluar{% else %}Evaluar{% endif %}
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Columna izquierda: datos -->
+    <div class="col-lg-8">
+
+      <!-- Datos personales -->
+      <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-person me-2"></i>Datos Personales</div>
+        <div class="card-body">
+          <div class="row g-2 small">
+            <div class="col-6"><span class="text-muted">Nombre:</span> <strong>{{ postulante.nombre_completo }}</strong></div>
+            <div class="col-6"><span class="text-muted">Cédula:</span> {{ postulante.cedula }}</div>
+            <div class="col-6"><span class="text-muted">Teléfono:</span> {{ postulante.telefono|default:"—" }}</div>
+            <div class="col-6"><span class="text-muted">Fecha registro:</span> {{ postulante.fecha_registro|date:"d/m/Y H:i" }}</div>
+            <div class="col-12"><span class="text-muted">Dirección:</span> {{ postulante.direccion|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requisitos Documentales -->
+      <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-folder2-open me-2"></i>Requisitos Documentales</div>
+        <div class="card-body">
+          <div class="row g-2 small">
+            <div class="col-12">
+              <span class="text-muted">1. Boleta de Inscripción:</span>
+              {% if postulante.ficha_socioeconomica.archivo_boleta_inscripcion %}
+              <a href="{{ postulante.ficha_socioeconomica.archivo_boleta_inscripcion.url }}" target="_blank" class="btn btn-sm btn-outline-primary ms-2">
+                <i class="bi bi-file-earmark-text me-1"></i>Ver archivo
+              </a>
+              {% else %}
+              <span class="badge text-bg-warning ms-2">No subido</span>
+              {% endif %}
+            </div>
+            <div class="col-12">
+              <span class="text-muted">2. Histórico Académico:</span>
+              {% if postulante.ficha_socioeconomica.archivo_historico_academico %}
+              <a href="{{ postulante.ficha_socioeconomica.archivo_historico_academico.url }}" target="_blank" class="btn btn-sm btn-outline-success ms-2">
+                <i class="bi bi-mortarboard me-1"></i>Ver archivo
+              </a>
+              {% else %}
+              <span class="badge text-bg-warning ms-2">No subido</span>
+              {% endif %}
+            </div>
+            <div class="col-12">
+              <span class="text-muted">3. Carnet de Identidad:</span>
+              {% if postulante.ficha_socioeconomica.archivo_carnet_identidad %}
+              <a href="{{ postulante.ficha_socioeconomica.archivo_carnet_identidad.url }}" target="_blank" class="btn btn-sm btn-outline-secondary ms-2">
+                <i class="bi bi-person-badge me-1"></i>Ver archivo
+              </a>
+              {% else %}
+              <span class="badge text-bg-warning ms-2">No subido</span>
+              {% endif %}
+            </div>
+            <div class="col-12">
+              <span class="text-muted">4. Certificado de Notas (PPA):</span>
+              {% if postulante.datos_academicos.certificado_notas_pdf %}
+              <a href="{{ postulante.datos_academicos.certificado_notas_pdf.url }}" target="_blank" class="btn btn-sm btn-outline-info ms-2">
+                <i class="bi bi-file-earmark-pdf me-1"></i>Ver certificado
+              </a>
+              {% else %}
+              <span class="badge text-bg-warning ms-2">No subido</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historial de Materias -->
+      <div class="card mb-3 shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white border-0 fw-bold d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span><i class="bi bi-mortarboard-fill text-info me-2"></i>Historial de Materias y Rendimiento Académico</span>
+          {% if evaluacion and evaluacion.estado != 'pendiente' %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill font-monospace small"><i class="bi bi-shield-fill-check me-1"></i>✅ Verificado</span>
+          {% else %}
+            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill font-monospace small"><i class="bi bi-hourglass-split me-1"></i>⏳ Pendiente de revisión</span>
+          {% endif %}
+        </div>
+        <div class="card-body pt-0">
+          {% if postulante.datos_academicos %}
+            <div class="row g-3 mb-3 text-center border-bottom pb-3">
+              <div class="col-4">
+                <div class="small text-muted">PPA (Promedio)</div>
+                <div class="fw-bold fs-5">{{ postulante.datos_academicos.ppa|floatformat:2 }}</div>
+              </div>
+              <div class="col-4">
+                <div class="small text-muted">Aprobadas</div>
+                <div class="fw-bold fs-5">{{ postulante.datos_academicos.materias_aprobadas }}</div>
+              </div>
+              <div class="col-4">
+                <div class="small text-muted">Puntaje Académico</div>
+                <div class="fw-bold fs-5 text-primary">{{ postulante.datos_academicos.puntaje_academico_total|floatformat:1 }} <span class="fs-6 text-muted">/ 30.0</span></div>
+                <small class="text-muted" style="font-size: 10px;">PPA: {{ postulante.datos_academicos.puntaje_ppa|floatformat:1 }} | Mat: {{ postulante.datos_academicos.puntaje_materias|floatformat:1 }}</small>
+              </div>
+            </div>
+          {% endif %}
+
+          {% if postulante.materias.all %}
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light text-secondary uppercase font-monospace small" style="font-size: 11px;">
+                  <tr>
+                    <th>Sigla</th>
+                    <th>Nombre de la Materia</th>
+                    <th class="text-center">Semestre</th>
+                    <th class="text-center">Nota Final</th>
+                    <th class="text-center">Estado</th>
+                  </tr>
+                </thead>
+                <tbody style="font-size: 12px;">
+                  {% for mat in postulante.materias.all %}
+                    <tr>
+                      <td class="font-monospace fw-bold">{{ mat.sigla }}</td>
+                      <td>{{ mat.nombre }}</td>
+                      <td class="text-center">{{ mat.semestre }}</td>
+                      <td class="text-center fw-bold {% if mat.nota >= 51 %}text-success{% else %}text-danger{% endif %}">{{ mat.nota|floatformat:1 }}</td>
+                      <td class="text-center">
+                        {% if mat.nota >= 51 %}
+                          <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Aprobada</span>
+                        {% else %}
+                          <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">Reprobada</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted small mb-0"><i class="bi bi-info-circle me-1"></i> Este postulante aún no ha registrado su historial académico.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Ficha IDH -->
+      {% if postulante.ficha_socioeconomica %}
+      <div class="card mb-3">
+        <div class="card-header"><i class="bi bi-file-earmark-person me-2"></i>Ficha Socioeconómica IDH</div>
+        <div class="card-body">
+          {% with f=postulante.ficha_socioeconomica %}
+          <h6 class="text-primary small fw-bold border-bottom pb-1">1. Datos Postulante</h6>
+          <div class="row g-2 small mb-3">
+            <div class="col-6"><span class="text-muted">Carrera:</span> {{ postulante.solicitud_verificacion.carrera|default:"—" }}</div>
+            <div class="col-6"><span class="text-muted">Facultad:</span> {{ postulante.solicitud_verificacion.facultad|default:"—" }}</div>
+            <div class="col-6"><span class="text-muted">Celular:</span> {{ postulante.telefono|default:"—" }}</div>
+            <div class="col-6"><span class="text-muted">Registro:</span> {{ postulante.solicitud_verificacion.numero_registro|default:"—" }}</div>
+          </div>
+
+          <h6 class="text-primary small fw-bold border-bottom pb-1">2. Economía y Dependencia</h6>
+          <div class="row g-2 small mb-3">
+            <div class="col-6"><span class="text-muted">Depende de:</span> {{ f.dependencia|default:"—" }}</div>
+            <div class="col-6"><span class="text-muted">Ocupación:</span> {{ f.ocupacion|default:"—" }}</div>
+            <div class="col-6"><span class="text-muted">Ingresos:</span> <span class="badge text-bg-info">{{ f.rango_ingresos|default:"—" }}</span></div>
+            <div class="col-12">
+              {% if f.doc_ocupacion %}
+              <a href="{{ f.doc_ocupacion.url }}" target="_blank" class="btn btn-sm btn-outline-secondary mt-1"><i class="bi bi-file-pdf"></i> Ver Respaldo de Ocupación</a>
+              {% endif %}
+              {% if f.doc_ingresos %}
+              <a href="{{ f.doc_ingresos.url }}" target="_blank" class="btn btn-sm btn-outline-secondary mt-1"><i class="bi bi-file-pdf"></i> Ver Respaldo de Ingresos</a>
+              {% endif %}
+            </div>
+          </div>
+
+          <h6 class="text-primary small fw-bold border-bottom pb-1">3. Grupo Familiar</h6>
+          <div class="row g-2 small mb-3">
+            <div class="col-6"><span class="text-muted">Miembros familiares:</span> {{ f.num_integrantes }} miembros</div>
+            <div class="col-6"><span class="text-muted">Tiene hijos:</span> {% if f.num_hijos > 0 %}Sí ({{ f.num_hijos }}){% else %}No{% endif %}</div>
+            <div class="col-12">
+              {% if f.miembros_familiares.all %}
+              <ul class="mb-0 ps-3">
+                {% for m in f.miembros_familiares.all %}
+                <li>{{ m.nombre_completo }} ({{ m.parentesco }}, {{ m.edad }} años) - {{ m.ocupacion }}</li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <span class="text-muted">No registra familiares en el cuadro.</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <h6 class="text-primary small fw-bold border-bottom pb-1">4 y 5. Procedencia y Residencia</h6>
+          <div class="row g-2 small mb-3">
+            <div class="col-12"><span class="text-muted">Procedencia:</span> {{ f.procedencia|default:"—" }}</div>
+            <div class="col-12"><span class="text-muted">Residencia:</span> {{ f.lugar_residencia|default:"—" }}</div>
+          </div>
+
+          <h6 class="text-primary small fw-bold border-bottom pb-1">6 y 7. Vivienda e Infraestructura</h6>
+          <div class="row g-2 small mb-3">
+            <div class="col-6"><span class="text-muted">Tenencia:</span> {{ f.tenencia_vivienda|default:"—" }}</div>
+            <div class="col-6"><span class="text-muted">Tipo de vivienda:</span> {{ f.tipo_vivienda|default:"—" }}</div>
+            <div class="col-12">
+              {% if f.doc_vivienda %}
+              <a href="{{ f.doc_vivienda.url }}" target="_blank" class="btn btn-sm btn-outline-secondary mt-1"><i class="bi bi-file-pdf"></i> Ver Respaldo de Vivienda</a>
+              {% endif %}
+            </div>
+          </div>
+
+          <h6 class="text-primary small fw-bold border-bottom pb-1">8 y 10. Extras</h6>
+          <div class="row g-2 small mb-3">
+            <div class="col-12"><span class="text-muted">Otro Beneficio:</span> {% if f.otro_beneficio %}Sí ({{ f.descripcion_otro_beneficio }}){% else %}No{% endif %}</div>
+          </div>
+
+          {% endwith %}
+        </div>
+      </div>
+      {% else %}
+      <div class="alert alert-warning border-0 rounded-3 small">
+        <i class="bi bi-exclamation-triangle me-2"></i>Ficha Socioeconómica no completada.
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Columna derecha: evaluación -->
+    <div class="col-lg-4">
+      <!-- Acciones de Revisión -->
+      <div class="card shadow-sm border-0 rounded-3 mb-3">
+        <div class="card-header bg-white border-0 fw-bold"><i class="bi bi-shield-check me-2 text-primary"></i>Estado de Revisión</div>
+        <div class="card-body pt-0">
+          <div class="mb-3">
+            <span class="text-muted small">Estado actual:</span>
+            {% if solicitud_beca %}
+              {% if solicitud_beca.rechazado %}
+                <span class="badge bg-danger text-white px-2 py-1 rounded-pill"><i class="bi bi-exclamation-octagon-fill me-1"></i> Rechazado</span>
+              {% elif solicitud_beca.estado == 'Aprobado' %}
+                <span class="badge bg-success text-white px-2 py-1 rounded-pill"><i class="bi bi-check-circle me-1"></i> Aprobado</span>
+              {% elif solicitud_beca.estado == 'Beca Asignada' %}
+                <span class="badge bg-primary text-white px-2 py-1 rounded-pill"><i class="bi bi-award-fill me-1"></i> Beca Asignada</span>
+              {% elif solicitud_beca.estado == 'No seleccionado' %}
+                <span class="badge bg-secondary text-white px-2 py-1 rounded-pill"><i class="bi bi-x me-1"></i> No seleccionado</span>
+              {% else %}
+                <span class="badge bg-warning text-dark px-2 py-1 rounded-pill"><i class="bi bi-clock me-1"></i> {{ solicitud_beca.estado }}</span>
+              {% endif %}
+            {% else %}
+              <span class="badge bg-secondary text-white px-2 py-1 rounded-pill"><i class="bi bi-clock me-1"></i> Pendiente</span>
+            {% endif %}
+          </div>
+
+          {% if solicitud_beca.motivo_rechazo %}
+            <div class="alert alert-danger border-0 rounded-3 small p-2 mb-3">
+              <strong>Motivo de rechazo:</strong> {{ solicitud_beca.motivo_rechazo }}
+            </div>
+          {% endif %}
+
+          {% if solicitud_beca.fecha_revision or solicitud_beca.fecha_rechazo %}
+            <div class="small text-muted mb-3">
+              <i class="bi bi-calendar-check me-1"></i> Revisado el: {{ solicitud_beca.fecha_revision|default:solicitud_beca.fecha_rechazo|date:"d/m/Y H:i" }}
+            </div>
+          {% endif %}
+
+          <form method="post" action="">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-muted mb-1">Observaciones Internas</label>
+              <textarea name="observaciones_internas" class="form-control form-control-sm" rows="3" placeholder="Notas internas visibles solo para el evaluador...">{{ solicitud_beca.observaciones_internas|default:'' }}</textarea>
+            </div>
+
+            <div class="d-grid gap-2">
+              {% if solicitud_beca.rechazado %}
+                <a href="{% url 'evaluaciones:reactivar_postulante' postulante.pk %}" class="btn btn-warning btn-sm rounded-3 fw-bold">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i> Reactivar Postulación
+                </a>
+              {% else %}
+                <button type="submit" name="aprobar" class="btn btn-success btn-sm rounded-3">
+                  <i class="bi bi-check-lg me-1"></i> Aprobar Postulación
+                </button>
+                <button type="button" class="btn btn-danger btn-sm rounded-3" data-bs-toggle="modal" data-bs-target="#modalRechazo">
+                  <i class="bi bi-x-lg me-1"></i> Rechazar Postulación
+                </button>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {% if evaluacion %}
+      <div class="card border-0 text-white mb-3"
+           style="background:linear-gradient(135deg,var(--primary),var(--primary-light))">
+        <div class="card-body text-center p-4">
+          <div class="small opacity-75 mb-1">Puntaje Total</div>
+          <div class="display-3 fw-black">{{ evaluacion.puntaje_total|floatformat:1 }}</div>
+          <div class="small opacity-75">sobre 100 puntos</div>
+          <hr class="opacity-25">
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="bg-white bg-opacity-10 rounded p-2">
+                <div class="small opacity-75">Académico</div>
+                <div class="fw-bold fs-5">{{ evaluacion.puntaje_academico|floatformat:1 }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="bg-white bg-opacity-10 rounded p-2">
+                <div class="small opacity-75">Socioecon.</div>
+                <div class="fw-bold fs-5">{{ evaluacion.puntaje_socioeconomico|floatformat:1 }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <span class="badge text-bg-light text-dark fs-6 px-3 py-2">
+              {{ evaluacion.get_estado_display }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body small">
+          {% if evaluacion.evaluado_por %}
+          <p class="mb-1"><i class="bi bi-person-check me-2 text-muted"></i>
+            Evaluado por: <strong>{{ evaluacion.evaluado_por.get_full_name }}</strong></p>
+          {% endif %}
+          {% if evaluacion.fecha_evaluacion %}
+          <p class="mb-1"><i class="bi bi-calendar me-2 text-muted"></i>
+            Fecha: {{ evaluacion.fecha_evaluacion|date:"d/m/Y H:i" }}</p>
+          {% endif %}
+          {% if evaluacion.observaciones %}
+          <p class="mb-0"><i class="bi bi-chat-text me-2 text-muted"></i>
+            {{ evaluacion.observaciones }}</p>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+      <div class="card text-center p-4">
+        <i class="bi bi-hourglass text-muted fs-1 mb-3"></i>
+        <p class="text-muted mb-0">
+          {% if tiene_datos_completos %}
+          Este postulante aún no ha sido evaluado.
+          {% else %}
+          Faltan datos para evaluar.
+          {% endif %}
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<!-- Modal de Rechazo -->
+<div class="modal fade" id="modalRechazo" tabindex="-1" aria-labelledby="modalRechazoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold text-dark" id="modalRechazoLabel">Rechazar Postulación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="">
+        {% csrf_token %}
+        <div class="modal-body">
+          <p class="text-muted small">Por favor, especifica el motivo del rechazo. Se enviará un correo electrónico de notificación automática al postulante con esta justificación.</p>
+          
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted mb-1">Motivo del rechazo *</label>
+            <textarea name="motivo_rechazo" class="form-control rounded-3" rows="4" required placeholder="Especificar detalles del rechazo (mínimo 10 caracteres)..."></textarea>
+          </div>
+          
+          <!-- Pasar observaciones internas también en el post de rechazo -->
+          <input type="hidden" name="observaciones_internas" id="observaciones_internas_hidden">
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" name="rechazar" class="btn btn-sm btn-danger rounded-pill px-4 fw-bold shadow-sm" onclick="syncObservaciones()">Confirmar Rechazo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function syncObservaciones() {
+    const mainObs = document.querySelector('textarea[name="observaciones_internas"]').value;
+    document.getElementById('observaciones_internas_hidden').value = mainObs;
+  }
+</script>
+
+{% endblock %}

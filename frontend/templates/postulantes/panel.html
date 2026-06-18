@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Mi Panel - Becas UAGRM{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="max-width-800 mx-auto fade-in">
+
+    <!-- Encabezado de Bienvenida -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h3 fw-bold mb-1 text-dark">Hola, {{ user.first_name }} 👋</h1>
+        <p class="text-muted mb-0">Bienvenido al Panel de Postulación de la Beca Albergue.</p>
+      </div>
+      <span class="badge bg-light text-primary border border-primary px-3 py-2 rounded-pill font-monospace small">
+        <i class="bi bi-shield-check me-1"></i> Perfil Verificado
+      </span>
+    </div>
+
+    <!-- Mensaje de Estado / Resultados de Selección -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+      {% if solicitud_beca and solicitud_beca.estado == 'Beca Asignada' %}
+        <div class="card-body p-4 bg-success text-white text-center">
+          <div class="fs-2 mb-2"><i class="bi bi-trophy-fill text-warning"></i></div>
+          <h5 class="fw-bold mb-1">¡Felicidades! Beca Asignada</h5>
+          <p class="mb-0 small opacity-90">Has sido seleccionado como beneficiario de la Beca Albergue.</p>
+        </div>
+      {% elif solicitud_beca and solicitud_beca.estado == 'No seleccionado' %}
+        <div class="card-body p-4 bg-secondary text-white text-center">
+          <div class="fs-2 mb-2"><i class="bi bi-x-circle-fill"></i></div>
+          <h5 class="fw-bold mb-1">Selección Finalizada</h5>
+          <p class="mb-0 small opacity-90">No has sido seleccionado dentro de los cupos de esta convocatoria.</p>
+        </div>
+      {% else %}
+        {% if estado_postulacion.is_completa %}
+          <div class="card-body p-4 text-center text-white" style="background: linear-gradient(135deg, #1b365d 0%, #10b981 100%);">
+            <div class="fs-2 mb-2 text-warning"><i class="bi bi-check-circle-fill"></i></div>
+            <h5 class="fw-bold mb-1">Postulación Completada</h5>
+            <p class="mb-0 small opacity-90">Tus datos están guardados, completos y listos para la optimización de cupos.</p>
+            <div class="mt-3">
+              <a href="{% url 'postulantes:mi_postulacion' %}" class="btn btn-sm btn-light rounded-pill px-4 fw-bold text-dark">
+                <i class="bi bi-eye-fill me-1"></i> Ver Declaración Jurada
+              </a>
+            </div>
+          </div>
+        {% else %}
+          <div class="card-body p-4 bg-warning-subtle border-start border-warning border-4 text-dark">
+            <div class="d-flex gap-3">
+              <div class="fs-2 text-warning"><i class="bi bi-exclamation-triangle-fill"></i></div>
+              <div>
+                <h5 class="fw-bold mb-1">Ficha de Postulación Incompleta</h5>
+                <p class="mb-0 small text-muted">Para entrar en el proceso de selección y optimización de cupos, es obligatorio que completes todos los pasos del Registro Académico y Ficha Socioeconómica detallados abajo.</p>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <!-- Tarjeta de Progreso Principal -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-header bg-white py-3 border-0">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0 fw-bold text-secondary"><i class="bi bi-clipboard-check me-2 text-primary"></i>Pasos Requeridos</h5>
+          {% if estado_postulacion.is_completa %}
+            <span class="badge bg-success rounded-pill px-3">Completado</span>
+          {% else %}
+            <span class="badge bg-warning text-dark rounded-pill px-3">En Proceso</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-body px-4 pb-4 pt-0">
+        <!-- Barra de Progreso -->
+        <div class="progress mb-4" style="height: 12px; border-radius: 30px;">
+          <div class="progress-bar {% if estado_postulacion.is_completa %}bg-success{% else %}bg-primary{% endif %} progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ progreso }}%; border-radius: 30px;" aria-valuenow="{{ progreso }}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+
+        <!-- Paso 1: Ficha Socioeconómica -->
+        <div class="p-3 mb-3 {% if estado_postulacion.ficha_completa %}bg-light-success border-success-subtle{% else %}bg-light border-light-subtle{% endif %} rounded-4 border d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div class="d-flex align-items-center">
+            <div class="fs-2 me-3 d-flex align-items-center justify-content-center">
+              {% if estado_postulacion.ficha_completa %}
+                <i class="bi bi-check-circle-fill text-success"></i>
+              {% else %}
+                <i class="bi bi-file-earmark-text text-secondary animate-pulse"></i>
+              {% endif %}
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h6 class="fw-bold mb-0 text-dark">Paso 1: Ficha Socioeconómica</h6>
+              </div>
+              <p class="text-muted small mb-0">Datos socioeconómicos de tu familia, residencia, vivienda y documentos de respaldo.</p>
+            </div>
+          </div>
+          <div>
+            {% if estado_postulacion.ficha_completa %}
+              <a href="{% url 'postulantes:ficha_socioeconomica' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold">
+                <i class="bi bi-pencil-square me-1"></i> Editar Ficha
+              </a>
+            {% else %}
+              <a href="{% url 'postulantes:ficha_socioeconomica' %}" class="btn btn-sm btn-primary rounded-pill px-4 fw-bold shadow glow-effect">
+                Completar Ficha
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Paso 2: Registro de Materias -->
+        <div class="p-3 mb-3 {% if estado_postulacion.tiene_materias %}bg-light-success border-success-subtle{% else %}bg-light border-light-subtle{% endif %} rounded-4 border d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div class="d-flex align-items-center">
+            <div class="fs-2 me-3 d-flex align-items-center justify-content-center">
+              {% if estado_postulacion.tiene_materias %}
+                <i class="bi bi-check-circle-fill text-success"></i>
+              {% else %}
+                <i class="bi bi-mortarboard text-secondary animate-pulse"></i>
+              {% endif %}
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h6 class="fw-bold mb-0 text-dark">Paso 2: Materias Cursadas</h6>
+              </div>
+              <p class="text-muted small mb-0">Registrar al menos una materia cursada el semestre pasado con sigla, nombre y nota final.</p>
+            </div>
+          </div>
+          <div>
+            {% if estado_postulacion.tiene_materias %}
+              <a href="{% url 'postulantes:registro_materias' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold">
+                <i class="bi bi-pencil-square me-1"></i> Editar Materias
+              </a>
+            {% else %}
+              <a href="{% url 'postulantes:registro_materias' %}" class="btn btn-sm btn-primary rounded-pill px-4 fw-bold shadow {% if estado_postulacion.ficha_completa %}glow-effect{% endif %}">
+                Registrar Materias
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .max-width-800 {
+    max-width: 800px;
+  }
+  .bg-light-success {
+    background-color: rgba(25, 135, 84, 0.06);
+  }
+  .border-success-subtle {
+    border-color: rgba(25, 135, 84, 0.15) !important;
+  }
+  .animate-pulse {
+    animation: pulse 2s infinite alternate;
+    display: inline-block;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.15); }
+  }
+  .glow-effect {
+    box-shadow: 0 0 12px rgba(13, 110, 253, 0.45);
+    animation: button-glow 2s infinite alternate;
+  }
+  @keyframes button-glow {
+    0% { box-shadow: 0 0 5px rgba(13, 110, 253, 0.3); }
+    100% { box-shadow: 0 0 15px rgba(13, 110, 253, 0.65); }
+  }
+</style>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Reevaluación Masiva{% endblock %}
+
+{% block content %}
+<div class="fade-in" style="max-width:600px;margin:0 auto">
+  <div class="card">
+    <div class="card-header">
+      <i class="bi bi-arrow-repeat me-2 text-warning"></i>Reevaluación Masiva
+    </div>
+    <div class="card-body p-4">
+      <div class="alert alert-warning border-0 rounded-3 mb-4">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        Esta acción recalculará los puntajes de <strong>todos</strong> los postulantes seleccionados
+        usando los parámetros actuales. No es reversible automáticamente.
+      </div>
+
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
+          <span class="fw-semibold">Total de postulantes en el sistema</span>
+          <span class="badge text-bg-primary fs-6">{{ total_postulantes }}</span>
+        </div>
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Filtrar por estado (opcional)</label>
+          <select name="estado" class="form-select">
+            <option value="">— Todos los postulantes —</option>
+            {% for val, label in estados %}
+            <option value="{{ val }}">Solo {{ label }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-text">Si no seleccionas, se reevalúan todos.</div>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="{% url 'evaluaciones:lista' %}" class="btn btn-outline-secondary flex-fill">
+            Cancelar
+          </a>
+          <button type="submit" class="btn btn-warning flex-fill fw-semibold"
+                  onclick="return confirm('¿Confirmas la reevaluación masiva?')">
+            <i class="bi bi-arrow-repeat me-1"></i>Iniciar reevaluación
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
